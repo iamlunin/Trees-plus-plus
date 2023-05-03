@@ -193,7 +193,6 @@ public:
 		length = w * h;
 		world_map.resize(width * extended_height, Cell(air));
 
-		//test();
 
 		for (int ind = 0; ind < world_map.size(); ind++) {
 
@@ -325,9 +324,6 @@ private:
 		), index_live_arr.end());
 	}
 
-	void test() {
-		max_age++;
-	}
 
 	void trees_handler() {
 		for (int i = 0; i < trees.enabled.size(); i++) {
@@ -366,10 +362,7 @@ private:
 	}
 
 	void try_grow(int index_tree, int index, int gen_index) {
-
 		try {
-
-
 			const auto& tree = trees.storage.at(index_tree);
 			const auto& gen = tree.genom.at(gen_index);
 			// ПО КАЖДОМУ ИЗ НАПРАВЛЕНИЙ
