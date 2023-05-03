@@ -8,6 +8,7 @@
 // сделать свет
 // сделать вероятность мутации генетически детерменированную
 // сделать генетически дерерменированное время жизни
+// настроить кодировку кириллицы
 
 Randomaizer gRAND;
 
@@ -26,6 +27,12 @@ public:
 			disabled.pop_back();
 		}
 		return enabled.back();
+	}
+
+	int push(T obj) {
+		int index = get_new();
+		storage[index] = obj;
+		return index;
 	}
 
 	void erase(int index) {
@@ -210,14 +217,16 @@ public:
 	}
 
 	void step() {
+		spawn_starting_seeds_if_needed();
+		cells_handler();
+		clean_up_index_live_arr();
+		trees_handler();
+		frame_count++;
+	}
 
-		// спавн новых семечек при пустом поле
-		if (index_live_arr.size() == 0) {
-			for (int i = 0; i < width / 2; i++)
-				spawn(rand() % width, rand()%height/2);
-		}
+private:
 
-		// ОСНОВНОЙ ЦИКЛ. ГЛАВНЫЙ. ЦЕНТРАЛЬНЫЙ.
+	void cells_handler() {
 		int old_length = index_live_arr.size();
 		for (int ind = 0; ind < old_length; ind++) {
 			int index = index_live_arr[ind];
@@ -227,7 +236,6 @@ public:
 				// ПОЛУЧИТЬ ИНДЕКС КЛЕТКИ СНИЗУ
 				int index_d = index + directions[down];
 
-				int old_index_tree;
 
 				switch (world_map[index_d].type) {
 
@@ -241,27 +249,20 @@ public:
 
 					// ПОД СПЕРМОЙ ГРУНТ. СПЕРМА ПРОРОСТАЕТ
 				case ground:
-					old_index_tree = c.index_tree; 
-					trees.storage[old_index_tree].cell_counter--;
-					c.become_live(green, trees.get_new());
-					trees.storage[c.index_tree] = Tree(trees.storage[old_index_tree].genom, 1);
+					trees.storage[c.index_tree].cell_counter--;
+					c.become_live(green, trees.push(Tree(trees.storage[c.index_tree].genom, 1)));
 					trees.storage[c.index_tree].cell_counter++;
 					break;
 
 					// ПОД СПЕРМОЙ НЕПОДХОДЯЩАЯ СРЕДА, СПЕРМА УМИРАЕТ
 				default:
-					index_live_arr[ind] = -index_live_arr[ind];
-					c.become(air);
-					trees.storage[c.index_tree].cell_counter--;
-
+					kill_cell(ind, c);
 				}
 			}
 			else {
 				// ТЕСТ НА СМЕРТЬ
 				if (trees.storage[c.index_tree].alive == false) {
-					index_live_arr[ind] = -index_live_arr[ind];
-					c.become(air);
-					trees.storage[c.index_tree].cell_counter--;
+					kill_cell(ind, c);
 					continue;
 				}
 
@@ -271,56 +272,52 @@ public:
 				}
 			}
 		}
+	}
 
+	void spawn_starting_seeds_if_needed() {
+		// спавн новых семечек при пустом поле
+		if (index_live_arr.size() == 0) {
+			for (int i = 0; i < width / 2; i++)
+				spawn(rand() % width, rand() % height / 2);
+		}
+	}
 
+	void clean_up_index_live_arr() {
 		// убрать умершие клетки из списка живых
 		index_live_arr.erase(std::remove_if(index_live_arr.begin(), index_live_arr.end(),
 			// если клетка не живая, в ней будет отрицательный индекс, равный положительному эквиваленту
 			[&](const auto& a) { if (a < 0) { return true; } return false; }
 		), index_live_arr.end());
-
-		// обработать список деревьев на предмет смерти
-		for (int i = 0; i < trees.enabled.size(); i++) {
-			int index = trees.enabled[i];
-			auto& t = trees.storage[index];
-
-			// это можно убрать после того как убедишься что ошибок нет
-			if (t.cell_counter < 0) { 
-				throw "cell_counter < 0";
-			}
-			// условия объявления дерева мертвым
-			if (t.age >= max_age) {
-				t.alive = false;
-
-				// условие удаления дерева их памяти
-				if (t.cell_counter <= 0)
-					trees.erase(i);
-
-			// выполнять если дерево живо
-			} else 
-				t.age++;
-
-		
-			
-			
-		}
-
-		// можно попробовать вызывать не каждый фрейм
-		trees.erase();
-
-		
-		frame_count++;
 	}
 
-private:
+
+
+	void trees_handler() {
+		for (int i = 0; i < trees.enabled.size(); i++) {
+			auto& tree = trees.storage[trees.enabled[i]];
+			if (tree.age >= max_age || tree.cell_counter <= 0) {
+				tree.alive = false;
+				if (tree.cell_counter <= 0)
+					trees.erase(i);
+			}
+			else
+				tree.age++;
+		}
+		trees.erase();
+	}
+
+
+	void kill_cell(int index, Cell& cell) {
+		index_live_arr[index] = -index_live_arr[index];
+		cell.become(air);
+		trees.storage[cell.index_tree].cell_counter--;
+	}
 
 	void try_spawn_semen(int ind) {
 		if (world_map[ind].type != air)
 			return;
 		// спавним виртуальное дерево родитель
-		int index_new_tree = trees.get_new();
-		trees.storage[index_new_tree] = Tree();
-		spawn(semen, ind, index_new_tree);
+		spawn(semen, ind, trees.push(Tree()));
 	}
 
 

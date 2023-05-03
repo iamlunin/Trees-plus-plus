@@ -322,7 +322,7 @@ void WorldCS::renderWorld() {
 					color_map_u32[x + y * size[0]] = color_arr[CA.get_world_cell_type(x, y)];
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
