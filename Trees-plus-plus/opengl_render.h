@@ -46,8 +46,8 @@ private:
 
 	uint32_t count_of_frames = 0;
 	uint32_t count_of_updates = 0;
-	std::ostringstream buff; // òåêñò áóôôåð
-	ch_tp frame_time_point[2]; // äâå ïåðåìåííûå âðåìåíè
+	std::ostringstream buff; // Ñ‚ÐµÐºÑÑ‚ Ð±ÑƒÑ„Ñ„ÐµÑ€
+	ch_tp frame_time_point[2]; // Ð´Ð²Ðµ Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ñ‹Ðµ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð¸
 	fastLinearFilter frameTime;
 	fastLinearFilter frameTimeLowLatency;
 
@@ -90,7 +90,7 @@ int Context::run() {
 	RAND.ini();
 
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("SFProText-Regular.ttf", 18.f, NULL, ImGui::GetIO().Fonts->GetGlyphRangesCyrillic());
-	// Ìåíþ è ñâîéñòâà îêîí Imgui
+	// ÐœÐµÐ½ÑŽ Ð¸ ÑÐ²Ð¾Ð¹ÑÑ‚Ð²Ð° Ð¾ÐºÐ¾Ð½ Imgui
 	///==============================
 	ImGui::GetIO().IniFilename = NULL;
 	ImGuiWindowFlags window_flags = 0;
@@ -109,7 +109,7 @@ int Context::run() {
 	}
 
 
-	// øåéäåðû ãðàôèêè
+	// ÑˆÐµÐ¹Ð´ÐµÑ€Ñ‹ Ð³Ñ€Ð°Ñ„Ð¸ÐºÐ¸
 
 	{
 		worldShader.name = std::string("worldShader");
@@ -123,8 +123,8 @@ int Context::run() {
 		worldShader.compile(sourseV.c_str(), sourseF.c_str());
 	}
 
-	// ñîçäàíèå ìèðà
-	WorldCS world;
+	// ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ðµ Ð¼Ð¸Ñ€Ð°
+	WorldCS world(1200, 150);
 
 	world.iniWorld();
 
@@ -146,21 +146,21 @@ int Context::run() {
 	glBindTexture(GL_TEXTURE_2D, map_texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, world.size[0], world.size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, &world.color_map[0]);
 
-	// Öèêë ãðàôèêè
+	// Ð¦Ð¸ÐºÐ» Ð³Ñ€Ð°Ñ„Ð¸ÐºÐ¸
 	///\/\/\/\/\/\/\/\///
 	glfwSwapInterval(Vsync);
 	while (!glfwWindowShouldClose(window)) {
-		// Ðàáîòà ñ glfw3
+		// Ð Ð°Ð±Ð¾Ñ‚Ð° Ñ glfw3
 		{	///============================================================///
 			if (VsyncNow != Vsync) {
 				glfwSwapInterval(Vsync);
 				VsyncNow = Vsync;
 			}
 
-			// Ïîëó÷àåì ýâåíòû
+			// ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ ÑÐ²ÐµÐ½Ñ‚Ñ‹
 			glfwPollEvents();
 
-			// Íàñòðàèâàåì êàìåðó ïîä ðàçðåøåíèå îêíà
+			// ÐÐ°ÑÑ‚Ñ€Ð°Ð¸Ð²Ð°ÐµÐ¼ ÐºÐ°Ð¼ÐµÑ€Ñƒ Ð¿Ð¾Ð´ Ñ€Ð°Ð·Ñ€ÐµÑˆÐµÐ½Ð¸Ðµ Ð¾ÐºÐ½Ð°
 			glfwGetFramebufferSize(window, &Xd, &Yd);
 			glViewport(0, 0, Xd, Yd);
 		}	///============================================================///
@@ -169,16 +169,16 @@ int Context::run() {
 	//	glClear(GL_COLOR_BUFFER_BIT);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		// Óïðàâëåíèå êàìåðîé ìûøüþ è êëàâîé
+		// Ð£Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ðµ ÐºÐ°Ð¼ÐµÑ€Ð¾Ð¹ Ð¼Ñ‹ÑˆÑŒÑŽ Ð¸ ÐºÐ»Ð°Ð²Ð¾Ð¹
 		static key_trigger boost, test, test2, gmesh, msaa;
 		vec2 mnPos, mxPos;
 		{
 			boost.push(glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS);
 			test.push(glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS);
 			test2.push(glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS);
-			// óïðàâëåíèå êàìåðîé
+			// ÑƒÐ¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ðµ ÐºÐ°Ð¼ÐµÑ€Ð¾Ð¹
 			{	///==============================
-				// äâèæåíèå êëàâèàòóðîé
+				// Ð´Ð²Ð¸Ð¶ÐµÐ½Ð¸Ðµ ÐºÐ»Ð°Ð²Ð¸Ð°Ñ‚ÑƒÑ€Ð¾Ð¹
 				{	///==============================
 					if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 						world.view.pos[0] -= (frameTimeLowLatency.get() / 1000.) * world.view.mst;
@@ -191,9 +191,9 @@ int Context::run() {
 				}	///==============================
 
 
-				// ìàñøòàáèðîâàíèå â óêàçàòåëü è äâèæåíèå
+				// Ð¼Ð°ÑÑˆÑ‚Ð°Ð±Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ Ð² ÑƒÐºÐ°Ð·Ð°Ñ‚ÐµÐ»ÑŒ Ð¸ Ð´Ð²Ð¸Ð¶ÐµÐ½Ð¸Ðµ
 				{	///==============================
-					// ïîëó÷åíèå ýâåíòà êîë¸ñèêà ìûøè
+					// Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ ÑÐ²ÐµÐ½Ñ‚Ð° ÐºÐ¾Ð»Ñ‘ÑÐ¸ÐºÐ° Ð¼Ñ‹ÑˆÐ¸
 					//float scroll = ImGui::GetIO().MouseWheel;
 					scroll += v_scroll[1];
 					v_scroll = vec2(0);
@@ -203,18 +203,18 @@ int Context::run() {
 					if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 						scroll += 10. * (frameTimeLowLatency.get() / 1000.);
 
-					dmPos2 = dmPos1; // äâèæåíèå
+					dmPos2 = dmPos1; // Ð´Ð²Ð¸Ð¶ÐµÐ½Ð¸Ðµ
 					glfwGetCursorPos(window, &dmPos1[0], &dmPos1[1]); dmPos1[0] = -dmPos1[0];
 					if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
 						world.view.pos -= mVec_to_wVec(dmPos2 - dmPos1, world.view.mst);
 					}
 					mPos = mPos_to_wPos(vec2(-dmPos1[0], dmPos1[1]), world.view.mst, world.view.pos);
 
-					/// êîìïåíñàöèÿ äâèæåíèÿ
+					/// ÐºÐ¾Ð¼Ð¿ÐµÐ½ÑÐ°Ñ†Ð¸Ñ Ð´Ð²Ð¸Ð¶ÐµÐ½Ð¸Ñ
 					// dmPos3 *= vec2(std::min(vec2(dmPos2.x - dmPos1.x).length() * 0.05, 2.), std::min(vec2(dmPos2.y - dmPos1.y).length() * 0.05, 2.)) * 0.3;
 					const frac pk = 0.2;
 
-					while (scroll > 0.01) { // ïðèáëèæåíèå
+					while (scroll > 0.01) { // Ð¿Ñ€Ð¸Ð±Ð»Ð¸Ð¶ÐµÐ½Ð¸Ðµ
 						scroll -= 0.1 * pk;
 						if (scroll < 0.) scroll = 0.;
 						vec2 mnPos = mPos_to_wPos(vec2(0, 0), world.view.mst, world.view.pos);
@@ -226,7 +226,7 @@ int Context::run() {
 
 						world.view.mst = std::max(world.view.mst, 10.);
 					}
-					while (scroll < -0.01) { // îòäàëåíèå 
+					while (scroll < -0.01) { // Ð¾Ñ‚Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ 
 						scroll += 0.1 * pk;
 						vec2 mnPos = mPos_to_wPos(vec2(0, 0), world.view.mst, world.view.pos);
 						vec2 mxPos = mPos_to_wPos(vec2(Xd, Yd), world.view.mst, world.view.pos);
@@ -252,9 +252,8 @@ int Context::run() {
 		}
 
 		static bool texture_update_mode = 1;
-		// Ãðàôèêà
+		// Ð“Ñ€Ð°Ñ„Ð¸ÐºÐ°
 		{
-			// ÷àøêà ïåòðè
 			if (1) {
 				glUseProgram(worldShader.glID);
 				static bool first_call = 1;
@@ -280,11 +279,11 @@ int Context::run() {
 			}
 		}
 
-		// Ðàáîòà ñ ImGui
+		// Ð Ð°Ð±Ð¾Ñ‚Ð° Ñ ImGui
 		static bool imgui_overlay = 1;
 		if (imgui_overlay)
 		{	///============================================================///
-			// ×òî-òî íóæíîå äëÿ ImGui
+			// Ð§Ñ‚Ð¾-Ñ‚Ð¾ Ð½ÑƒÐ¶Ð½Ð¾Ðµ Ð´Ð»Ñ ImGui
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -292,24 +291,24 @@ int Context::run() {
 			ImGui::Begin("Manage", &imgui_overlay, window_flags);
 			ImGui::SetWindowPos(ImVec2(0, 0));
 
-			if (ImGui::Button("Øàã")) {
+			if (ImGui::Button("Ð¨Ð°Ð³")) {
 				if (world.auto_run)
 					world.auto_run = 0;
 				world.task = std::min(10, world.task + 1);
 			}
 			ImGui::SameLine();
-			ImGui::Checkbox("Àâòîçàïóñê", &world.auto_run);
+			ImGui::Checkbox("ÐÐ²Ñ‚Ð¾Ð·Ð°Ð¿ÑƒÑÐº", &world.auto_run);
 
-			ImGui::Checkbox("Îáíîâëåíèå òåêñòóðû", &texture_update_mode);
-			ImGui::Checkbox("Âåðò. ñèíõ.", &Vsync);
+			ImGui::Checkbox("ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐºÑÑ‚ÑƒÑ€Ñ‹", &texture_update_mode);
+			ImGui::Checkbox("Ð’ÐµÑ€Ñ‚. ÑÐ¸Ð½Ñ….", &Vsync);
 
 
-			ImGui::Text("ïîçèöèÿ ìûøè: (%.0f, %.0f)", mp[0], mp[1]);
+			ImGui::Text("Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ Ð¼Ñ‹ÑˆÐ¸: (%.0f, %.0f)", mp[0], mp[1]);
 
-			// Âûâîä FPS è âðåìåíè êàäðà
+			// Ð’Ñ‹Ð²Ð¾Ð´ FPS Ð¸ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð¸ ÐºÐ°Ð´Ñ€Ð°
 			ImGui::Text("fps %.1f tpf %.1f UPS: %.0f", 1000. / frameTime.get(), frameTime.get(), 1000. / world.update_time.get());
 
-			if (ImGui::TreeNode("Áåí÷ìàðêè")) {
+			if (ImGui::TreeNode("Ð‘ÐµÐ½Ñ‡Ð¼Ð°Ñ€ÐºÐ¸")) {
 				const auto& tms1 = world.timemarks;
 				const auto& tms2 = world.timemarks_ll;
 				double sum = 0.;
@@ -325,18 +324,18 @@ int Context::run() {
 				ImGui::TreePop();
 			}
 
-			if (ImGui::TreeNode("Ñ÷¸ò÷èêè")) {
-				ImGui::Text("÷èñëî àêòèâíûõ áëîêîâ: %i", world.dynamic_pool.enabled.size());
+			if (ImGui::TreeNode("Ð¡Ñ‡Ñ‘Ñ‚Ñ‡Ð¸ÐºÐ¸")) {
+				ImGui::Text("Ñ‡Ð¸ÑÐ»Ð¾ Ð´ÐµÑ€ÐµÐ²ÑŒÐµÐ²: %i", world.CA.trees.enabled.size());
 				ImGui::TreePop();
 			}
 			ImGui::End();
 
-			// Çàïóñêàåì ðåíäåð ìåíþ
+			// Ð—Ð°Ð¿ÑƒÑÐºÐ°ÐµÐ¼ Ñ€ÐµÐ½Ð´ÐµÑ€ Ð¼ÐµÐ½ÑŽ
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
-		// Ïîäñ÷¸ò êàäðîâ
+		// ÐŸÐ¾Ð´ÑÑ‡Ñ‘Ñ‚ ÐºÐ°Ð´Ñ€Ð¾Ð²
 		{
 			count_of_frames++;
 			bool swapBit = count_of_frames % 2;
@@ -365,7 +364,7 @@ int render_ran() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	auto window = glfwCreateWindow(800, 600, "¨ëêè", NULL, NULL);
+	auto window = glfwCreateWindow(800, 600, "ÐÐ»ÐºÐ¸", NULL, NULL);
 	if (window == NULL) return -1;
 
 	glfwMakeContextCurrent(window);

@@ -120,9 +120,6 @@
     <ClInclude Include="Imgui\imgui.h">
       <Filter>Исходные файлы\Библиотеки\Imgui</Filter>
     </ClInclude>
-    <ClInclude Include="life.h">
-      <Filter>Исходные файлы\Игра</Filter>
-    </ClInclude>
     <ClInclude Include="CA.h">
       <Filter>Исходные файлы\Игра</Filter>
     </ClInclude>

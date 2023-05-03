@@ -1,14 +1,15 @@
 #pragma once
 
 // TODO
-// сделать возраст клетки и ген отвечающий за то в каком возрасте она должна размножится
-// сделать настраиваемую консоль
-// сделать разным деревьям разный цвет
-// сделать энергию
-// сделать свет
-// сделать вероятность мутации генетически детерменированную
-// сделать генетически дерерменированное время жизни
-// настроить кодировку кириллицы
+// 
+// СЃРґРµР»Р°С‚СЊ РІРѕР·СЂР°СЃС‚ РєР»РµС‚РєРё Рё РіРµРЅ РѕС‚РІРµС‡Р°СЋС‰РёР№ Р·Р° С‚Рѕ РІ РєР°РєРѕРј РІРѕР·СЂР°СЃС‚Рµ РѕРЅР° РґРѕР»Р¶РЅР° СЂР°Р·РјРЅРѕР¶РёС‚СЃВ¤
+// СЃРґРµР»Р°С‚СЊ РЅР°СЃС‚СЂР°РёРІР°РµРјСѓСЋ РєРѕРЅСЃРѕР»СЊ
+// СЃРґРµР»Р°С‚СЊ СЂР°Р·РЅС‹Рј РґРµСЂРµРІСЊВ¤Рј СЂР°Р·РЅС‹Р№ С†РІРµС‚
+// СЃРґРµР»Р°С‚СЊ СЌРЅРµСЂРіРёСЋ
+// СЃРґРµР»Р°С‚СЊ СЃРІРµС‚
+// СЃРґРµР»Р°С‚СЊ РІРµСЂРѕВ¤С‚РЅРѕСЃС‚СЊ РјСѓС‚Р°С†РёРё РіРµРЅРµС‚РёС‡РµСЃРєРё РґРµС‚РµСЂРјРµРЅРёСЂРѕРІР°РЅРЅСѓСЋ
+// СЃРґРµР»Р°С‚СЊ РіРµРЅРµС‚РёС‡РµСЃРєРё РґРµСЂРµСЂРјРµРЅРёСЂРѕРІР°РЅРЅРѕРµ РІСЂРµРјВ¤ Р¶РёР·РЅРё
+// РЅР°СЃС‚СЂРѕРёС‚СЊ РєРѕРґРёСЂРѕРІРєСѓ РєРёСЂРёР»Р»РёС†С‹ +
 
 Randomaizer gRAND;
 
@@ -41,7 +42,7 @@ public:
 		}
 	}
 
-	// убирает мусор из enabled и возвращает в disabled
+	// СѓР±РёСЂР°РµС‚ РјСѓСЃРѕСЂ РёР· enabled Рё РІРѕР·РІСЂР°С‰Р°РµС‚ РІ disabled
 	void erase() {
 		enabled.erase(std::remove_if(enabled.begin(), enabled.end(),
 			[&](const int& a) { return a < 0; }
@@ -114,7 +115,7 @@ public:
 	}
 
 	void init() {
-		genom = { // что отрастить в стороны + тип клетки
+		genom = { // С‡С‚Рѕ РѕС‚СЂР°СЃС‚РёС‚СЊ РІ СЃС‚РѕСЂРѕРЅС‹ + С‚РёРї РєР»РµС‚РєРё
 			{r(),r(),r(),r(),semen},
 			{r(),r(),r(),r(),r2(),},
 			{r(),r(),r(),r(),r2(),},
@@ -176,6 +177,9 @@ public:
 
 class CellularAutomation {
 public:
+	std::vector<uint8_t> color_map;
+	uint32_t* color_map_u32;
+
 	PoolContainer<Tree> trees;
 	std::vector<int> index_live_arr;
 	int max_age;
@@ -188,6 +192,9 @@ public:
 	std::vector<int> directions;
 
 	CellularAutomation(int w, int h) {
+		color_map.resize(w * h * 4, 255);
+		color_map_u32 = (uint32_t*)&color_map[0];
+
 		gRAND.ini();
 		max_age = h;
 		width = w;
@@ -233,13 +240,13 @@ private:
 			auto& c = world_map[index];
 
 			if (c.type == semen) {
-				// ПОЛУЧИТЬ ИНДЕКС КЛЕТКИ СНИЗУ
+				// РџРћР›РЈР§РРўР¬ РРќР”Р•РљРЎ РљР›Р•РўРљР РЎРќРР—РЈ
 				int index_d = index + directions[down];
 
 
 				switch (world_map[index_d].type) {
 
-					// ПОД СПЕРМОЙ БЛОК ВОЗДУХА. СПЕРМА ПАДАЕТ
+					// РЎР•РњР•РќР¬ РџРђР”РђР•Рў
 				case air:
 					index_live_arr[ind] = -index_live_arr[ind];
 					c.become(air);
@@ -247,26 +254,26 @@ private:
 					world_map[index_d].become_live(semen, c.index_tree, c.gen_index);
 					break;
 
-					// ПОД СПЕРМОЙ ГРУНТ. СПЕРМА ПРОРОСТАЕТ
+					// РЎР•РњР•РќР¬ РџР РћР РћРЎРўРђР•Рў
 				case ground:
 					trees.storage[c.index_tree].cell_counter--;
 					c.become_live(green, trees.push(Tree(trees.storage[c.index_tree].genom, 1)));
 					trees.storage[c.index_tree].cell_counter++;
 					break;
 
-					// ПОД СПЕРМОЙ НЕПОДХОДЯЩАЯ СРЕДА, СПЕРМА УМИРАЕТ
+					// РЎР•РњР•РќР¬ РЈРњРР РђР•Рў
 				default:
 					kill_cell(ind, c);
 				}
 			}
 			else {
-				// ТЕСТ НА СМЕРТЬ
+				// РљР›Р•РўРљРђ РЈРњРР РђР•Рў
 				if (trees.storage[c.index_tree].alive == false) {
 					kill_cell(ind, c);
 					continue;
 				}
 
-				// ПОПЫТКА В РАЗМНОЖЕНИЕ
+				// РљР›Р•РўРљРђ РџР РћР РћРЎРўРђР•Рў
 				if (c.type == green) {
 					try_grow(c.index_tree, index, c.gen_index);
 				}
@@ -275,7 +282,7 @@ private:
 	}
 
 	void spawn_starting_seeds_if_needed() {
-		// спавн новых семечек при пустом поле
+		// СЃРїР°РІРЅ РЅРѕРІС‹С… СЃРµРјРµС‡РµРє РїСЂРё РїСѓСЃС‚РѕРј РїРѕР»Рµ
 		if (index_live_arr.size() == 0) {
 			for (int i = 0; i < width / 2; i++)
 				spawn(rand() % width, rand() % height / 2);
@@ -283,9 +290,9 @@ private:
 	}
 
 	void clean_up_index_live_arr() {
-		// убрать умершие клетки из списка живых
+		// СѓР±СЂР°С‚СЊ СѓРјРµСЂС€РёРµ РєР»РµС‚РєРё РёР· СЃРїРёСЃРєР° Р¶РёРІС‹С…
 		index_live_arr.erase(std::remove_if(index_live_arr.begin(), index_live_arr.end(),
-			// если клетка не живая, в ней будет отрицательный индекс, равный положительному эквиваленту
+			// РµСЃР»Рё РєР»РµС‚РєР° РЅРµ Р¶РёРІР°В¤, РІ РЅРµР№ Р±СѓРґРµС‚ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Р№ РёРЅРґРµРєСЃ, СЂР°РІРЅС‹Р№ РїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕРјСѓ СЌРєРІРёРІР°Р»РµРЅС‚Сѓ
 			[&](const auto& a) { if (a < 0) { return true; } return false; }
 		), index_live_arr.end());
 	}
@@ -316,7 +323,7 @@ private:
 	void try_spawn_semen(int ind) {
 		if (world_map[ind].type != air)
 			return;
-		// спавним виртуальное дерево родитель
+		// СЃРїР°РІРЅРёРј РІРёСЂС‚СѓР°Р»СЊРЅРѕРµ РґРµСЂРµРІРѕ СЂРѕРґРёС‚РµР»СЊ
 		spawn(semen, ind, trees.push(Tree()));
 	}
 
@@ -335,15 +342,15 @@ private:
 
 			const auto& tree = trees.storage.at(index_tree);
 			const auto& gen = tree.genom.at(gen_index);
-			// ПО КАЖДОМУ ИЗ НАПРАВЛЕНИЙ
+			// РџРћ РљРђР–Р”РћРњРЈ РР— РќРђРџР РђР’Р›Р•РќРР™
 			for (int i = 0; i < 4; i++) {
-				// ЕСЛИ ЕСТЬ ЖЕЛАНИЕ РАЗМНОЖИТСЯ
+				// Р•РЎР›Р Р•РЎРўР¬ Р–Р•Р›РђРќРР• Р РђР—РњРќРћР–РРўРЎРЇ
 				const auto& g = gen.at(i);
 				if (g < tree.genom.size()) {
-					// ЕСЛИ ЕСТЬ ВОЗМОЖНОСТЬ РАЗМНОЖИТСЯ
+					// Р•РЎР›Р Р•РЎРўР¬ Р’РћР—РњРћР–РќРћРЎРўР¬ Р РђР—РњРќРћР–РРўРЎРЇ
 					int index_n = index + directions[i];
 					if (world_map[index_n].type == air) {
-						// РАЗМНОЖИТСЯ
+						// Р РђР—РњРќРћР–РРўРЎРЇ
 						spawn(tree.genom[g][4], index_n, index_tree, g);
 					}
 				}
@@ -355,7 +362,7 @@ private:
 			std::cout << e.what();
 		}
 
-		world_map[index].become(wood); // одеревенение
+		world_map[index].become(wood); // РѕРґРµСЂРµРІРµРЅРµРЅРёРµ
 
 	}
 

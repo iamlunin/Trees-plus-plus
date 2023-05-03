@@ -300,7 +300,6 @@
     <ClInclude Include="Imgui\imstb_textedit.h" />
     <ClInclude Include="Imgui\imstb_truetype.h" />
     <ClInclude Include="include.h" />
-    <ClInclude Include="life.h" />
     <ClInclude Include="OpenGL\gl_func.h" />
     <ClInclude Include="OpenGL\shad_primitive.h" />
     <ClInclude Include="OpenGL\stb_image.h" />
