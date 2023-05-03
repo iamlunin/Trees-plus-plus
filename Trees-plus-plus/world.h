@@ -6,7 +6,7 @@ using namespace osl;
 
 
 
-static const std::vector<std::string> timemarks_name = { "обработка эвентов", "симуляция", "отрисовка" };
+static const std::vector<std::string> timemarks_name = { "обработка эвентов", "симуляция", "ничего" };
 
 int poz(int x, int y) {
 	return (x < 0) ? (x + y) : ((x >= y) ? (x - y) : (x));
@@ -14,9 +14,7 @@ int poz(int x, int y) {
 
 int saw(int x, int y) { return(((x%y) + y) % y); }
 
-inline uint32_t color_u32(ivec4 c) {
-	return uint8_t(c[0]) + (uint8_t(c[1]) << 8) + (uint8_t(c[2]) << 16) + (uint8_t(c[3]) << 24);
-}
+
 
 class BlockType;
 class CellularAutomation;
@@ -165,31 +163,14 @@ void WorldCS::renderWorld() {
 			}
 			
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
-			// отчистка пулов
+			
 			
 			CA.step();
 
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
 			
-
-			enum {
-				semen = 0,
-				green = 1,
-				wood = 2,
-				air = 3,
-				ground = 4,
-			};
-			static const uint32_t color_arr[] = { 
-				color_u32(ivec4(0, 0, 0, 255)),
-				color_u32(ivec4(255, 103, 61, 255)),
-				color_u32(ivec4(128, 143, 255, 255)),
-				color_u32(ivec4(255)), 
-				color_u32(ivec4(60, 50, 40, 250))
-			};
+			// нижний бенчмарк конечно можно и удалить
 			
-			for (int x = 0; x < size[0]; x++)
-				for (int y = 0; y < size[1]; y++)
-					CA.color_map_u32[x + y * size[0]] = color_arr[CA.get_world_cell_type(x, y)];
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
 
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
