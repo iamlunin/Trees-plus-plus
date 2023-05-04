@@ -12,7 +12,7 @@ int poz(int x, int y) {
 	return (x < 0) ? (x + y) : ((x >= y) ? (x - y) : (x));
 }
 
-int saw(int x, int y) { return(((x%y) + y) % y); }
+int saw(int x, int y) { return(((x % y) + y) % y); }
 
 
 
@@ -54,8 +54,8 @@ class WorldCS {
 public:
 	CellularAutomation CA;
 
-	WorldCS(int w, int h) : update_time(1000), 
-		timemarks(timemarks_name.size(), fastLinearFilter(300)), 
+	WorldCS(int w, int h) : update_time(1000),
+		timemarks(timemarks_name.size(), fastLinearFilter(300)),
 		timemarks_ll(timemarks_name.size(), fastLinearFilter(10)),
 		CA(w, h)
 	{
@@ -69,16 +69,17 @@ public:
 	};
 	View view;
 
-	
+
 
 	int task = 0;
 	bool auto_run = 1;
+	bool slow_mode = 1;
 
 	bool is_open;
 
 	ivec2 size;
 
-	
+
 	void iniWorld();
 
 	void renderWorld();
@@ -103,7 +104,7 @@ public:
 	class Particle;
 	class FreeParticle;
 	class Trees;
-	
+
 
 
 	int count_of_updates = 0;
@@ -112,7 +113,7 @@ public:
 	std::vector<fastLinearFilter> timemarks_ll;
 
 private:
-	
+
 };
 
 
@@ -132,7 +133,7 @@ void WorldCS::renderWorld() {
 	is_open = 1;
 
 	while (is_open) {
-		
+
 		if (task > 0 || auto_run == 1) {
 			if (task > 0)
 				task--;
@@ -161,19 +162,20 @@ void WorldCS::renderWorld() {
 					break;
 				}
 			}
-			
+
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
-			
-			
+
+
 			CA.step();
 
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
-			
+
 			// нижний бенчмарк конечно можно и удалить
-			
+
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
 
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			if (slow_mode)
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));

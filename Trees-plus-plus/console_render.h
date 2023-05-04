@@ -8,7 +8,7 @@ int console_ran() {
 	int H = 30;
 
 	CellularAutomation ca(W, H);
-	
+
 
 	std::vector<char> str(ca.length + 1, ' ');
 	str[ca.length] = '\0';
@@ -16,7 +16,7 @@ int console_ran() {
 	const char gradient[] = ".oO T";
 	while (true) {
 
-		
+
 
 
 		ca.step();
@@ -26,9 +26,9 @@ int console_ran() {
 			}
 
 		std::cout << &str[0];
-		
 
-	
+
+
 		Sleep(1);
 	}
 
