@@ -313,6 +313,7 @@
     <ClInclude Include="world.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.gitignore" />
     <None Include="Shaders\Graphics\world.frag" />
     <None Include="Shaders\Graphics\world.vert" />
   </ItemGroup>
