@@ -49,6 +49,20 @@ float insideBox(vec2 v, vec2 bottomLeft, vec2 topRight) {
     return s.x * s.y;   
 }
 
+
+//float fix_color_sky(vec2 coord, vec2 size){
+//	float count_layers = 5.;
+//	float horizont = 1;
+//	float min_bright = 0.7;
+//	float bright_pixel_art = 0.9;
+//
+//	float yPaster = min(1., floor(coord.y*(1/horizont)/size.y * count_layers)/count_layers) * (1.-min_bright) + min_bright;
+//	float c2 = min(1., float(mod(coord.x, 2)==0) + float(mod(coord.y, 2)==0));
+//	float c3 =  coord.y >= size.y*horizont ? (1.-c2) : (1.-c2)*bright_pixel_art ;
+//	return (c3 + c2 ) * yPaster;
+//}
+
+
 // MAIN
 ///============================================================///
 void main() {
@@ -58,6 +72,8 @@ void main() {
 	pixel = vec3(40, 40, 40);
 	
 	
+	//vec2 test = ViewWorld.xy;
+
 	// проверка выхода за пределы карты
 	if (insideBox(Pos, vec2(0.), Dr) > 0.5) {
 		ivec2 ipos = ivec2(Pos);
@@ -65,19 +81,24 @@ void main() {
 		vec2 frpos = fract(Pos);
 		vec4 map_data = texelFetch(map_texture, ipos, 0);
 
-		if(map_data[0] * map_data[1] * map_data[2] > 0.999)
+		if(map_data[0] * map_data[1] * map_data[2] > 0.999){
 			pixel = mix(vec3(175, 225, 255), vec3(40, 190, 245), fPos.y) * map_data[3]; // цвет неба
+			//pixel *= fix_color_sky(Dr-ipos, Dr);
+		}
 		else
 			pixel = map_data.rgb * map_data.a * map_data.a * 255.;
 
 		if (ipos == Mpos)
 			pixel *= 0.9;
 
-	} else if (insideBox(Pos, vec2(0.), vec2(Dr.x, Dr.y + 120.)) > 0.5) {
+		
+	} else if (insideBox(Pos, vec2(0.), vec2(Dr.x, Dr.y + 0.)) > 0.5) {
 		float k = (Pos.y - Dr.y) / 100.;
 		pixel = mix(vec3(40, 190, 245), vec3(20, 90, 120), (k + 0.5) * k * 0.7);
+		
 	} else
 		pixel = vec3(25 ,76 ,76);
+		
 
 	pixel /= 255;
 }

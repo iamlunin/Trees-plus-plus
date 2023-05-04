@@ -325,7 +325,7 @@ int Context::run() {
 			}
 
 			if (ImGui::TreeNode("Счётчики")) {
-				ImGui::Text("число деревьев: %i", world.CA.trees.enabled.size());
+				ImGui::Text("Вымираний было: %i", world.CA.great_spawn_counter);
 				ImGui::TreePop();
 			}
 			ImGui::End();
@@ -364,7 +364,7 @@ int render_ran() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	auto window = glfwCreateWindow(800, 600, "Ёлки", NULL, NULL);
+	auto window = glfwCreateWindow(800, 600, "Trees++", NULL, NULL);
 	if (window == NULL) return -1;
 
 	glfwMakeContextCurrent(window);
