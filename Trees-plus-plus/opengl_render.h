@@ -28,7 +28,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 
 class Context {
 public:
-	int run();
+	int run(int w, int h);
 	Context(GLFWwindow* w) : window(w), frameTime(60), frameTimeLowLatency(3) {};
 private:
 	int err = 0;
@@ -82,7 +82,7 @@ void glGetIntegeri_vCout(int l) {
 	std::cout << size << '\n';
 }
 
-int Context::run() {
+int Context::run(int w, int h) {
 	if (err != 0)
 		return err;
 	frame_time_point[0] = chGetTime();
@@ -124,7 +124,7 @@ int Context::run() {
 	}
 
 	// создание мира
-	WorldCS world(1200, 150);
+	WorldCS world(w, h);
 
 	world.iniWorld();
 
@@ -298,10 +298,9 @@ int Context::run() {
 			}
 			ImGui::SameLine();
 			ImGui::Checkbox("Автозапуск", &world.auto_run);
-
+			ImGui::Checkbox("Замедление", &world.slow_mode);
 			ImGui::Checkbox("Обновление текстуры", &texture_update_mode);
 			ImGui::Checkbox("Верт. синх.", &Vsync);
-
 
 			ImGui::Text("позиция мыши: (%.0f, %.0f)", mp[0], mp[1]);
 
@@ -328,6 +327,23 @@ int Context::run() {
 				ImGui::Text("Вымираний было: %i", world.CA.great_spawn_counter);
 				ImGui::TreePop();
 			}
+
+			if (ImGui::TreeNode("Просмотр генома")) {
+				int tree_id = -1;
+				int index = int(mp[0]) + int(mp[1]) * world.CA.width;
+				if (index >= 0 && index < world.CA.world_map.size())
+					tree_id = world.CA.world_map[index].index_tree;
+				// отображение генома дерева
+				if (tree_id >= 0 && world.CA.world_map[index].type != air) {
+					auto g = world.CA.trees.storage[tree_id].genom;
+					for (int i = 0; i < g.old_genom.size(); i++) {
+						auto& v = g.old_genom[i];
+						ImGui::Text("%i) %i %i %i %i %i", i, v[0], v[1], v[2], v[3], v[4]);
+					}
+				}
+				ImGui::TreePop();
+			}
+
 			ImGui::End();
 
 			// Запускаем рендер меню
@@ -358,7 +374,7 @@ int Context::run() {
 
 
 
-int render_ran() {
+int render_ran(int w, int h) {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -386,7 +402,7 @@ int render_ran() {
 	}
 
 	Context c(window);
-	int r = c.run();
+	int r = c.run(w,h);
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();

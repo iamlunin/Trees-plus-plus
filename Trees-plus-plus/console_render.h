@@ -2,10 +2,9 @@
 
 #include "CA.h"
 
-int console_ran() {
+int console_ran(int W, int H) {
 
-	int W = 120;
-	int H = 30;
+
 
 	CellularAutomation ca(W, H);
 
