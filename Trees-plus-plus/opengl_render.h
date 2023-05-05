@@ -336,8 +336,8 @@ int Context::run(int w, int h) {
 				// отображение генома дерева
 				if (tree_id >= 0 && world.CA.world_map[index].type != air) {
 					auto g = world.CA.trees.storage[tree_id].genom;
-					for (int i = 0; i < g.old_genom.size(); i++) {
-						auto& v = g.old_genom[i];
+					for (int i = 0; i < g.modes.size(); i++) {
+						auto& v = g.modes[i];
 						ImGui::Text("%i) %i %i %i %i %i", i, v[0], v[1], v[2], v[3], v[4]);
 					}
 				}

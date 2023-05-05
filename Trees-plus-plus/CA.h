@@ -8,6 +8,7 @@
 // сделать настраиваемую консоль
 // кнопка убить всех, ползунок упс, счетчик времени с последнего спавна
 // записать правила мутаций в более удобном виде
+// сделать раздельный вызов функций become
 
 
 
@@ -55,6 +56,10 @@ public:
 		), enabled.end());
 	}
 
+	T& operator[] (const int index) {
+		return storage[index];
+	};
+
 	std::vector<int> enabled;
 	std::vector<int> disabled;
 };
@@ -82,6 +87,68 @@ float fr() {
 }
 
 
+uint8_t generate_gen(int size) {
+	return r8(0, size * 2);
+}
+
+uint8_t generate_type() {
+	return r8(0, 2);
+}
+
+uint8_t generate_breeding_age() {
+	return r8(0, 8);
+}
+
+class Mode {
+public:
+	std::vector<uint8_t> dir;
+	uint8_t type;
+	uint8_t breeding_age;
+	
+	Mode(){
+
+	}
+
+	Mode(int size) {
+		dir = { generate_gen(size), generate_gen(size), generate_gen(size), generate_gen(size) };
+		type = generate_type();
+		breeding_age = generate_breeding_age();
+	}
+
+	uint8_t& operator[] (const int index) {
+		return dir[index];
+	};
+
+	const uint8_t& operator[] (const float index) {
+		return dir[int(index)];
+	};
+
+};
+
+class Genom {
+public:
+	int size = 10; // сайз не надо делать более чем 255/2
+	std::vector<Mode> modes;
+	float max_age;
+	ivec3 color;
+
+	
+
+	Genom() {
+		max_age = fr();
+		color = ivec3(gRAND.u8(), gRAND.u8(), gRAND.u8());
+		modes.resize(size, Mode(size));
+	}
+
+	Mode& operator[] (const int index) {
+		return modes[index];
+	};
+
+	const Mode& operator[] (const float index) {
+		return modes[int(index)];
+	};
+};
+
 
 
 class Tree {
@@ -92,12 +159,7 @@ public:
 	int cell_counter;
 	uint32_t color_deviation = 0u;
 
-	class Genom {
-	public:
-		std::vector<std::vector<uint8_t>> old_genom;
-		float max_age = fr();
-		ivec3 color = ivec3(gRAND.u8(), gRAND.u8(), gRAND.u8());
-	};
+	
 	Genom genom;
 
 	Tree() {
@@ -115,17 +177,19 @@ public:
 	void init(Genom& from_this, int mutation) {
 		genom = from_this;
 		genom.color = clamp(genom.color + ivec3(vec3(gRAND.nf(), gRAND.nf(), gRAND.nf()) * vec3(10, 10, 10)), ivec3(0), ivec3(255));
+		genom.max_age = clamp(genom.max_age + gRAND.nf() * 0.02, 0, 1);
 		color_deviation = color_u32(ivec4(genom.color[0], genom.color[1], genom.color[2], 0u));
 		for (int i = 0; i < mutation; i++) {
-			int index1 = gRAND.u16() % genom.old_genom.size();
-			int index2 = gRAND.u16() % genom.old_genom[index1].size();
+			int index1 = gRAND.u16() % genom.size;
+			int index2 = gRAND.u16() % 6;
 
-			if (index2 == (genom.old_genom[index1].size() - 2))
-				genom.old_genom[index1][index2] = r8(0, 2);
-			else if (index2 == (genom.old_genom[index1].size() - 1))
-				genom.old_genom[index1][index2] = r8(0, 8);
+			if (index2 == 5)
+				genom[index1].type = generate_type();
+			else if (index2 == 4)
+				genom[index1].breeding_age = generate_breeding_age();
 			else
-				genom.old_genom[index1][index2] = r8(0, genom.old_genom.size() * 2);
+				genom[index1][index2] = generate_gen(genom.size);
+		
 		}
 		_init();
 	}
@@ -136,32 +200,7 @@ public:
 	}
 
 	void init() {
-		int s = 10; 
-		// old_genom это массив
-		// ген это вложенный в old_genom массив
-		// каждая клетка имеет свой активный ген который определяет ее поведение
-		// предпоследнее число каждого гена определяет тип клетки
-		// последнее число определяет какой должен быть возраст клетки чтобы она приступила к отращиванию других клеток
-		// после отращивания клетка деревенеет
-		// первые четыре числа каждого гена отвечают за то клетку с каким активным гЕном она отрастит в каждую из сторон
-		// если число выходит за пределы размера генома, то новая клетка не будет отрощена
-	
-		
-		
-		
-		genom.old_genom = {
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),semen,0},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-			{r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,s * 2),r8(0,2),r8(0,8)},
-
-		};
+		genom = Genom();
 		_init();
 	}
 
@@ -202,6 +241,8 @@ public:
 	PoolContainer<Tree> trees;
 	std::vector<int> index_live_arr;
 	int max_age;
+	int max_cell;
+	int max_semen;
 	int width;
 	int height, extended_height;
 	int length;
@@ -212,6 +253,7 @@ public:
 	std::vector<int> directions;
 
 
+	
 
 	CellularAutomation(int w, int h) {
 
@@ -219,13 +261,14 @@ public:
 		color_map_u32 = (uint32_t*)&color_map[0];
 
 		gRAND.ini();
-		max_age = h * 2;
+		max_cell = h / 2;
+		max_age = h * 10;
+		max_semen = 2;
 		width = w;
 		height = h, extended_height = h + 1;
 		length = w * h;
 		world_map.resize(width * extended_height, Cell(air));
-
-
+	
 		for (int ind = 0; ind < world_map.size(); ind++) {
 
 			int x = (ind % width);
@@ -287,9 +330,9 @@ private:
 
 					// СЕМЕНЬ ПРОРОСТАЕТ
 				case ground:
-					trees.storage[c.index_tree].cell_counter--;
-					become_live(c, index, green, trees.push(Tree(trees.storage[c.index_tree].genom, 1)));
-					trees.storage[c.index_tree].cell_counter++;
+					trees[c.index_tree].cell_counter--;
+					become_live(c, index, green, trees.push(Tree(trees[c.index_tree].genom, 1)));
+					trees[c.index_tree].cell_counter++;
 					break;
 
 					// СЕМЕНЬ УМИРАЕТ
@@ -299,7 +342,7 @@ private:
 			}
 			else {
 				// КЛЕТКА УМИРАЕТ
-				if (trees.storage[c.index_tree].alive == false) {
+				if (trees[c.index_tree].alive == false || trees[c.index_tree].cell_counter > max_cell) {
 					kill_cell(ind, c, index);
 					continue;
 				}
@@ -307,9 +350,11 @@ private:
 				// КЛЕТКА ПРОРОСТАЕТ
 				if (c.type == green) {
 					c.age++;
-					// пофиксить эту строчку
-					if (c.age > trees.storage[c.index_tree].genom.old_genom[c.gen_index][5])
+					// можно попробовать пофиксить эту строчку
+					if (c.age > trees[c.index_tree].genom[c.gen_index].breeding_age)
 						try_grow(c.index_tree, index, c.gen_index);
+
+
 				}
 			}
 		}
@@ -319,7 +364,7 @@ private:
 		static const uint32_t color_arr[] = {
 				color_u32(ivec4(0, 0, 0, 255)),			// semen = 0,
 				color_u32(ivec4(215, 103, 61, 255)),	// green = 1,
-				color_u32(ivec4(0, 0, 0, 255)),	// wood = 2,
+				color_u32(ivec4(0, 0, 0, 255)),	        // wood = 2,
 				color_u32(ivec4(255)),					// air = 3,
 				color_u32(ivec4(60, 50, 40, 255))		// ground = 4,
 		};
@@ -327,7 +372,7 @@ private:
 		if (type != wood)
 			color_map_u32[index] = color_arr[type];
 		else
-			color_map_u32[index] = color_arr[type] + trees.storage[cell.index_tree].color_deviation;
+			color_map_u32[index] = color_arr[type] + trees[cell.index_tree].color_deviation;
 
 		cell.type = type;
 	}
@@ -366,7 +411,7 @@ private:
 
 	void trees_handler() {
 		for (int i = 0; i < trees.enabled.size(); i++) {
-			auto& tree = trees.storage[trees.enabled[i]];
+			auto& tree = trees[trees.enabled[i]];
 			if (tree.age >= max_age * tree.genom.max_age || tree.cell_counter <= 0) {
 				tree.alive = false;
 				if (tree.cell_counter <= 0)
@@ -382,7 +427,7 @@ private:
 	void kill_cell(int index, Cell& cell, int index_world_map) {
 		index_live_arr[index] = -index_live_arr[index];
 		become(cell, index_world_map, air);
-		trees.storage[cell.index_tree].cell_counter--;
+		trees[cell.index_tree].cell_counter--;
 	}
 
 	void try_spawn_semen(int ind) {
@@ -397,22 +442,23 @@ private:
 	void spawn(int type, int ind, int ind_tree, int ind_gen = 0) {
 		index_live_arr.push_back(ind);
 		become_live(world_map[ind], ind, type, ind_tree, ind_gen);
-		trees.storage[ind_tree].cell_counter++;
+		trees[ind_tree].cell_counter++;
 	}
 
 	void try_grow(int index_tree, int index, int gen_index) {
-		const auto& tree = trees.storage[index_tree];
-		const auto& gen = tree.genom.old_genom[gen_index];
+		const Tree& tree = trees[index_tree]; // зачем тут конст
+		const Mode& mode = tree.genom.modes[gen_index]; // зачем тут конст
+
 		// ПО КАЖДОМУ ИЗ НАПРАВЛЕНИЙ
 		for (int i = 0; i < 4; i++) {
 			// ЕСЛИ ЕСТЬ ЖЕЛАНИЕ РАЗМНОЖИТСЯ
-			const auto& g = gen.at(i);
-			if (g < tree.genom.old_genom.size()) {
+			const uint8_t& g = mode.dir[i];
+			if (g < tree.genom.size) {
 				// ЕСЛИ ЕСТЬ ВОЗМОЖНОСТЬ РАЗМНОЖИТСЯ
 				int index_n = index + directions[i];
 				if (world_map[index_n].type == air) {
 					// РАЗМНОЖИТСЯ
-					spawn(tree.genom.old_genom[g][4], index_n, index_tree, g);
+					spawn(tree.genom.modes[g].type, index_n, index_tree, g);
 				}
 			}
 		}
