@@ -302,47 +302,74 @@ int Context::run(int w, int h) {
 			ImGui::Checkbox("Обновление текстуры", &texture_update_mode);
 			ImGui::Checkbox("Верт. синх.", &Vsync);
 
+			if (ImGui::Button("Очистить")) {
+				world.auto_run = false;
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				world.CA.kill_all();
+				world.auto_run = true;
+			}
+
 			ImGui::Text("позиция мыши: (%.0f, %.0f)", mp[0], mp[1]);
 
 			// Вывод FPS и времени кадра
-			ImGui::Text("fps %.1f tpf %.1f UPS: %.0f", 1000. / frameTime.get(), frameTime.get(), 1000. / world.update_time.get());
+			ImGui::Text("fps %.1f UPS: %.0f", 1000. / frameTime.get(), 1000. / world.update_time.get());
+			//ImGui::Text("fps %.1f tpf %.1f UPS: %.0f", 1000. / frameTime.get(), frameTime.get(), 1000. / world.update_time.get());
 
-			if (ImGui::TreeNode("Бенчмарки")) {
-				const auto& tms1 = world.timemarks;
-				const auto& tms2 = world.timemarks_ll;
-				double sum = 0.;
-				for (auto i : tms1)
-					sum += i.get() / 100.;
-
-				for (int i = 0; i < tms1.size(); i++) {
-					ImGui::Text(timemarks_name[i].c_str());
-					ImGui::SameLine();
-					ImGui::Text(": %.1f%% \t %.1f \t %.1f", tms1[i].get() / sum, tms1[i].get(), tms2[i].get());
-				}
-
-				ImGui::TreePop();
-			}
-
-			if (ImGui::TreeNode("Счётчики")) {
+			//if (ImGui::TreeNode("Бенчмарки")) {
+			//	const auto& tms1 = world.timemarks;
+			//	const auto& tms2 = world.timemarks_ll;
+			//	double sum = 0.;
+			//	for (auto i : tms1)
+			//		sum += i.get() / 100.;
+			//
+			//	for (int i = 0; i < tms1.size(); i++) {
+			//		ImGui::Text(timemarks_name[i].c_str());
+			//		ImGui::SameLine();
+			//		ImGui::Text(": %.1f%% \t %.1f \t %.1f", tms1[i].get() / sum, tms1[i].get(), tms2[i].get());
+			//	}
+			//
+			//	ImGui::TreePop();
+			//}
+			
+			if (ImGui::TreeNode("Глобал")) {
 				ImGui::Text("Вымираний было: %i", world.CA.great_spawn_counter);
+				ImGui::Text("Возраст жизни: %i", world.CA.frame_count);
+				ImGui::Text("Количество деревьев: %i", world.CA.trees.enabled.size());
+				ImGui::Text("Количество клеток: %i", world.CA.index_live_arr.size());
 				ImGui::TreePop();
 			}
 
-			if (ImGui::TreeNode("Просмотр генома")) {
+
+			if (ImGui::TreeNode("Курсор")) {
 				int tree_id = -1;
 				int index = int(mp[0]) + int(mp[1]) * world.CA.width;
 				if (index >= 0 && index < world.CA.world_map.size())
 					tree_id = world.CA.world_map[index].index_tree;
-				// отображение генома дерева
+				
 				if (tree_id >= 0 && world.CA.world_map[index].type != air) {
-					auto g = world.CA.trees.storage[tree_id].genom;
-					for (int i = 0; i < g.modes.size(); i++) {
-						auto& v = g.modes[i];
-						ImGui::Text("%i) %i %i %i %i %i", i, v[0], v[1], v[2], v[3], v[4]);
+					auto g = world.CA.trees[tree_id].genom;
+
+					ImGui::Text("Дерево:");
+					ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
+					ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
+					//ImGui::Text("энергия %i", world.CA.trees[tree_id].energy);
+
+
+					ImGui::Text("\nКлетка:");
+					ImGui::Text("мод %i", world.CA.world_map[index].gen_index);
+					ImGui::Text("возраст %i", world.CA.world_map[index].age);
+
+					ImGui::Text("\nГеном:");
+					for (int i = 0; i < g.size; i++) {
+						auto& v = g[i];
+						ImGui::Text("%i) %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age);
 					}
+					
+
 				}
 				ImGui::TreePop();
 			}
+
 
 			ImGui::End();
 
