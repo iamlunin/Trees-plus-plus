@@ -238,6 +238,7 @@ public:
 	uint32_t* color_map_u32;
 	PoolContainer<Tree> trees;
 	std::vector<int> index_live_arr;
+	bool task_kill_all = false;
 	int max_age;
 	int max_cell;
 	int max_semen;
@@ -294,6 +295,10 @@ public:
 
 	void step() {
 		spawn_starting_seeds_if_needed();
+		if (task_kill_all) {
+			kill_all();
+			task_kill_all = false;
+		}
 		clean_up_index_live_arr();
 		cells_handler();
 		trees_handler();
@@ -301,18 +306,12 @@ public:
 	}
 
 	void kill_all() {
-		//for (int i = 0; i < trees.enabled.size(); i++)
-			//trees[trees.enabled[i]].alive = false;
 		for (int ind = index_live_arr.size()-1; ind >= 0; ind--) {
-			
 			int index = index_live_arr[ind];
 			if (index > 0) {
 				auto& c = world_map[index];
 				kill_cell(ind, c, index);
 			}
-			if (false)
-				throw 1;
-	
 		}
 	}
 

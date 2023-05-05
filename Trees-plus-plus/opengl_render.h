@@ -303,10 +303,7 @@ int Context::run(int w, int h) {
 			ImGui::Checkbox("Верт. синх.", &Vsync);
 
 			if (ImGui::Button("Очистить")) {
-				world.auto_run = false;
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
-				world.CA.kill_all();
-				world.auto_run = true;
+				world.CA.task_kill_all = true;
 			}
 
 			ImGui::Text("позиция мыши: (%.0f, %.0f)", mp[0], mp[1]);
