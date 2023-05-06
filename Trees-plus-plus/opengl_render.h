@@ -332,7 +332,7 @@ int Context::run(int w, int h) {
 				ImGui::Text("Вымираний было: %i", world.CA.great_spawn_counter);
 				ImGui::Text("Возраст жизни: %i", world.CA.frame_count);
 				ImGui::Text("Количество деревьев: %i", world.CA.trees.enabled.size());
-				ImGui::Text("Количество клеток: %i", world.CA.index_live_arr.size());
+				ImGui::Text("Количество клеток: %i", world.CA.live_cell_arr.size());
 				ImGui::TreePop();
 			}
 
@@ -340,30 +340,33 @@ int Context::run(int w, int h) {
 			if (ImGui::TreeNode("Курсор")) {
 				int tree_id = -1;
 				int index = int(mp[0]) + int(mp[1]) * world.CA.width;
-				if (index >= 0 && index < world.CA.world_map.size())
-					tree_id = world.CA.world_map[index].index_tree;
-				
-				if (tree_id >= 0 && world.CA.world_map[index].type != air) {
-					auto g = world.CA.trees[tree_id].genom;
+				auto& arr = world.CA.live_cell_arr; // нужна ли эта строка?
+				for (auto e : arr) {
+					if (e.index == index) {
+						tree_id = e.index_tree;
+						auto g = world.CA.trees[tree_id].genom;
 
-					ImGui::Text("Дерево:");
-					ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
-					ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
-					//ImGui::Text("энергия %i", world.CA.trees[tree_id].energy);
+						ImGui::Text("Дерево:");
+						ImGui::Text("индекс %i", tree_id);
+						ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
+						ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
+						//ImGui::Text("энергия %i", world.CA.trees[tree_id].energy);
 
 
-					ImGui::Text("\nКлетка:");
-					ImGui::Text("мод %i", world.CA.world_map[index].gen_index);
-					ImGui::Text("возраст %i", world.CA.world_map[index].age);
+						ImGui::Text("\nКлетка:");
+						ImGui::Text("мод %i", e.gen_index);
+						ImGui::Text("возраст %i", e.age);
 
-					ImGui::Text("\nГеном:");
-					for (int i = 0; i < g.size; i++) {
-						auto& v = g[i];
-						ImGui::Text("%i) %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age);
+						ImGui::Text("\nГеном:");
+						for (int i = 0; i < g.size; i++) {
+							auto& v = g[i];
+							ImGui::Text("%i) %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age);
+						}
 					}
-					
-
 				}
+
+		
+
 				ImGui::TreePop();
 			}
 

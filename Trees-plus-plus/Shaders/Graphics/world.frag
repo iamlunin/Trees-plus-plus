@@ -50,7 +50,7 @@ float insideBox(vec2 v, vec2 bottomLeft, vec2 topRight) {
 }
 
 
-//float fix_color_sky(vec2 coord, vec2 size){
+float fix_color_sky(vec2 coord, vec2 size){
 //	float count_layers = 5.;
 //	float horizont = 1;
 //	float min_bright = 0.7;
@@ -60,7 +60,9 @@ float insideBox(vec2 v, vec2 bottomLeft, vec2 topRight) {
 //	float c2 = min(1., float(mod(coord.x, 2)==0) + float(mod(coord.y, 2)==0));
 //	float c3 =  coord.y >= size.y*horizont ? (1.-c2) : (1.-c2)*bright_pixel_art ;
 //	return (c3 + c2 ) * yPaster;
-//}
+	return abs(size.y/2.-coord.y) < size.y/4. ? 1. : 0.9;
+
+}
 
 
 // MAIN
@@ -83,7 +85,7 @@ void main() {
 
 		if(map_data[0] * map_data[1] * map_data[2] > 0.999){
 			pixel = mix(vec3(175, 225, 255), vec3(40, 190, 245), fPos.y) * map_data[3]; // цвет неба
-			//pixel *= fix_color_sky(Dr-ipos, Dr);
+			pixel *= fix_color_sky(Dr-ipos, Dr);
 		}
 		else
 			pixel = map_data.rgb * map_data.a * map_data.a * 255.;

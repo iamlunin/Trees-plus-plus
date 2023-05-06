@@ -10,7 +10,9 @@
 // можно сделать бенчмарки
 // можно сделать раздельный вызов функций become
 // можно сделать вероятность мутации генетически детерменированную
-
+// рипит мод
+// килл семена
+// отображать возраст жизни в более понятном значении
 
 
 Randomaizer gRAND;
@@ -73,9 +75,10 @@ void remove(std::vector<T>& v, size_t index) {
 enum {
 	semen = 0,
 	green = 1,
-	wood = 2,
-	air = 3,
-	ground = 4,
+	bollet = 2,
+	wood = 3,
+	air = 4,
+	ground = 5,
 };
 
 uint8_t r8(int out, int to) { // от 0 до 255 
@@ -93,7 +96,7 @@ uint8_t generate_type() {
 }
 
 uint8_t generate_breeding_age() {
-	return r8(0, 8);
+	return r8(0, 5);
 }
 
 class Mode {
@@ -153,10 +156,9 @@ public:
 class Tree {
 public:
 	int age;
-	int energy;
 	bool alive;
 	int cell_counter;
-	int semen_counter;
+
 	uint32_t color_deviation = 0u;
 	Genom genom;
 
@@ -207,21 +209,36 @@ public:
 private:
 	void _init() {
 		age = 0;
-		energy = 0;
 		cell_counter = 0;
-		semen_counter = 0;
 		alive = true;
 	}
 };
 
 
 
+class LiveCell {
+public:
+	int index;
+
+	uint8_t gen_index;
+	int age;
+	int index_tree;
+
+	LiveCell(int ind_map, int ind_tree, uint8_t mode) {
+		init(ind_map, ind_tree, mode);
+	}
+
+	void init(int ind_map, int ind_tree, uint8_t mode) {
+		index = ind_map;
+		index_tree = ind_tree;
+		gen_index = mode;
+		age = 0;
+	}
+};
+
 class Cell {
 public:
 	uint8_t type;
-	uint8_t gen_index;
-	int age;
-	int index_tree = -1;
 
 
 	Cell(int t) {
@@ -232,49 +249,46 @@ public:
 };
 
 
+
+
 class CellularAutomation {
 public:
 	std::vector<uint8_t> color_map;
 	uint32_t* color_map_u32;
 	PoolContainer<Tree> trees;
-	std::vector<int> index_live_arr;
 	bool task_kill_all = false;
 	int max_age;
 	int max_cell;
-	int max_semen;
 	int width;
-	int height, extended_height;
+	int height;
+	int extended_height;
 	int length;
 	std::vector<Cell> world_map;
 	int frame_count = 0;
 	int great_spawn_counter = -1;
 	enum { up, right, down, left };
 	std::vector<int> directions;
-
-
-	
+	std::vector<LiveCell> live_cell_arr;
 
 	CellularAutomation(int w, int h) {
 
 		color_map.resize(w * h * 4, 255);
 		color_map_u32 = (uint32_t*)&color_map[0];
-
 		gRAND.ini();
-		max_cell = h / 3;
-		max_age = h * 2;
-		max_semen = 100;
+		max_cell = h * 2;
+		max_age = h * 4;
 		width = w;
 		height = h, extended_height = h + 1;
 		length = w * h;
 		world_map.resize(width * extended_height, Cell(air));
-	
+		
 		for (int ind = 0; ind < world_map.size(); ind++) {
 
 			int x = (ind % width);
 			int y = (ind / width);
 
 			if (y < 1)
-				become(world_map[ind], ind, ground);
+				become(ind, ground);
 
 			if (y >= height)
 				world_map[ind].type = ground;
@@ -289,9 +303,11 @@ public:
 		try_spawn_semen(x + y * width);
 	}
 
+
 	int get_world_cell_type(int x, int y) {
 		return world_map[x + y * width].type;
 	}
+
 
 	void step() {
 		spawn_starting_seeds_if_needed();
@@ -305,72 +321,73 @@ public:
 		frame_count++;
 	}
 
+
 	void kill_all() {
-		for (int ind = index_live_arr.size()-1; ind >= 0; ind--) {
-			int index = index_live_arr[ind];
+		for (int ind = live_cell_arr.size()-1; ind >= 0; ind--) {
+			LiveCell live_cell = live_cell_arr[ind];
+			int index = live_cell.index;
 			if (index > 0) {
-				auto& c = world_map[index];
-				kill_cell(ind, c, index);
+				kill_cell(ind, live_cell, index);
 			}
 		}
 	}
+
+
 
 private:
 
 
-
-
-
 	void cells_handler() {
-		int old_length = index_live_arr.size();
 
+		int old_length = live_cell_arr.size();
 		for (int ind = 0; ind < old_length; ind++) {
-			int index = index_live_arr[ind];
-			if (index < 0)
-				continue;
-			auto& c = world_map[index];
+
+			LiveCell& live_cell = live_cell_arr[ind];
+			int index_map = live_cell.index;
+			int type = world_map[index_map].type;
 
 			// пофиксить эту строчку
-			if (c.type == semen) {
-				int index_d = index + directions[down];
+			if (type == semen) {
+				int index_target = index_map + directions[down];
 
-				switch (world_map[index_d].type) {
+				switch (world_map[index_target].type) {
 
 					// СЕМЕНЬ ПАДАЕТ
 				case air:
-					index_live_arr[ind] = -index_live_arr[ind];
-					become(c, index, air);
-					index_live_arr.push_back(index_d);
-					become_live(world_map[index_d], index_d, semen, c.index_tree, c.gen_index);
+					become(index_map, air);
+					
+					live_cell.index = index_target;
+					become(index_target, semen);
 					break;
 
 					// СЕМЕНЬ ПРОРОСТАЕТ
 				case ground:
-					trees[c.index_tree].cell_counter--;
-					become_live(c, index, green, trees.push(Tree(trees[c.index_tree].genom, 1)));
-					trees[c.index_tree].cell_counter++;
+					trees[live_cell.index_tree].cell_counter--;
+					live_cell.index_tree = trees.push(Tree(trees[live_cell.index_tree].genom, 1));
+					become(index_map, green);
+					trees[live_cell.index_tree].cell_counter++;
 					break;
 
 					// СЕМЕНЬ УМИРАЕТ
 				default:
-					kill_cell(ind, c, index);
+					kill_cell(ind, live_cell, index_map);
 				}
 			}
 			else {
 				// КЛЕТКА УМИРАЕТ
-				if (trees[c.index_tree].alive == false 
-					|| trees[c.index_tree].cell_counter >= max_cell
+				if (trees[live_cell.index_tree].alive == false
+					|| trees[live_cell.index_tree].cell_counter >= max_cell
 					) { 
-					kill_cell(ind, c, index);
+					kill_cell(ind, live_cell, index_map);
 					continue;
 				}
 
 				// КЛЕТКА ПРОРОСТАЕТ
-				if (c.type == green) {
-					c.age++;
+				if (type == green) {
+					live_cell.age++;
 					// можно попробовать пофиксить эту строчку
-					if (c.age > trees[c.index_tree].genom[c.gen_index].breeding_age)
-						try_grow(c.index_tree, index, c.gen_index);
+					if (live_cell.age > trees[live_cell.index_tree].genom[live_cell.gen_index].breeding_age)
+						try_grow(live_cell.index_tree, index_map, live_cell.gen_index);
 
 
 				}
@@ -378,10 +395,13 @@ private:
 		}
 	}
 
-	void become(Cell& cell, int index, int type) {
+
+
+	void become(int index, int type, uint32_t color_deviation = 0) {
 		static const uint32_t color_arr[] = {
 				color_u32(ivec4(0, 0, 0, 255)),			// semen = 0,
-				color_u32(ivec4(215, 103, 61, 255)),	// green = 1,
+				color_u32(ivec4(103, 215, 61, 255)),	// green = 1,
+				color_u32(ivec4(233, 103, 61, 255)),	// bullet = 2,
 				color_u32(ivec4(0, 0, 0, 255)),	        // wood = 2,
 				color_u32(ivec4(255)),					// air = 3,
 				color_u32(ivec4(60, 50, 40, 255))		// ground = 4,
@@ -390,41 +410,29 @@ private:
 		if (type != wood)
 			color_map_u32[index] = color_arr[type];
 		else
-			color_map_u32[index] = color_arr[type] + trees[cell.index_tree].color_deviation;
+			color_map_u32[index] = color_arr[type] + color_deviation;
 
-		cell.type = type;
+		world_map[index].type = type;
 	}
 
-	void become_live(Cell& cell, int index, int type, int index_tree) {
-		become(cell, index, type);
-		cell.index_tree = index_tree;
-		cell.age = 0;
-	}
-
-	void become_live(Cell& cell, int index, int type, int index_tree, int gen_index) {
-		become(cell, index, type);
-		cell.gen_index = gen_index;
-		cell.index_tree = index_tree;
-		cell.age = 0;
-	}
+	
 
 
 	void spawn_starting_seeds_if_needed() {
 		// спавн новых семечек при пустом поле
-		if (index_live_arr.size() == 0) {
+		if (live_cell_arr.size() == 0) {
 			frame_count = 0;
 			great_spawn_counter++;
 			for (int i = 0; i < width / 2; i++)
-				spawn(rand() % width, rand() % height / 2);
+				spawn(rand() % width,  height / 2 + rand() % height / 4 - height / 8);
 		}
 	}
 
 	void clean_up_index_live_arr() {
-		// убрать умершие клетки из списка живых
-		index_live_arr.erase(std::remove_if(index_live_arr.begin(), index_live_arr.end(),
+		live_cell_arr.erase(std::remove_if(live_cell_arr.begin(), live_cell_arr.end(),
 			// если клетка не живая, в ней будет отрицательный индекс, равный положительному эквиваленту
-			[&](const auto& a) { if (a < 0) { return true; } return false; }
-		), index_live_arr.end());
+			[&](const auto& a) { if (a.index < 0) { return true; } return false; }
+		), live_cell_arr.end());
 	}
 
 
@@ -434,7 +442,6 @@ private:
 			if (
 				tree.age >= max_age * tree.genom.max_age 
 				|| tree.cell_counter <= 0
-				//|| tree.semen_counter > max_semen
 				//|| tree.cell_counter > max_cell
 				) {
 				tree.alive = false;
@@ -448,9 +455,9 @@ private:
 	}
 
 
-	void kill_cell(int index, Cell& cell, int index_world_map) {
-		index_live_arr[index] = -index_live_arr[index];
-		become(cell, index_world_map, air);
+	void kill_cell(int index, LiveCell& cell, int index_world_map) {
+		live_cell_arr[index].index = -live_cell_arr[index].index;
+		become(index_world_map, air);
 		trees[cell.index_tree].cell_counter--;
 	}
 
@@ -464,12 +471,9 @@ private:
 
 
 	void spawn(int type, int ind, int ind_tree, int ind_gen = 0) {
-		//if (!type) // не забыть удалить потом эти две строки
-		//	trees[ind_tree].semen_counter++;
-		index_live_arr.push_back(ind);
-		become_live(world_map[ind], ind, type, ind_tree, ind_gen);
+		live_cell_arr.push_back(LiveCell(ind, ind_tree, ind_gen));
+		become(ind, type);
 		trees[ind_tree].cell_counter++;
-		
 	}
 
 	void try_grow(int index_tree, int index, int gen_index) {
@@ -485,7 +489,6 @@ private:
 				int index_n = index + directions[i];
 				if (world_map[index_n].type == air) {
 					// РАЗМНОЖИТСЯ
-					
 					spawn(tree.genom.modes[g].type, index_n, index_tree, g);
 				}
 			}
@@ -493,7 +496,7 @@ private:
 
 
 
-		become(world_map[index], index, wood); // одеревенение 
+		become(index, wood, tree.color_deviation); // одеревенение 
 
 	}
 

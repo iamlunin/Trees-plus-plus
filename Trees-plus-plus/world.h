@@ -175,7 +175,7 @@ void WorldCS::renderWorld() {
 			timemarks_ll[dtm_id].push(timemarks[dtm_id++].push(dtm.get()));
 
 			if (slow_mode)
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
