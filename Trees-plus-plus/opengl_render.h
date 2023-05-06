@@ -354,13 +354,15 @@ int Context::run(int w, int h) {
 
 
 						ImGui::Text("\nКлетка:");
-						ImGui::Text("мод %i", e.gen_index);
+						ImGui::Text("мод %i", e.index_mode);
 						ImGui::Text("возраст %i", e.age);
+						ImGui::Text("повтор %i", e.repeat);
 
 						ImGui::Text("\nГеном:");
+						ImGui::Text("тип, age деления, повтор");
 						for (int i = 0; i < g.size; i++) {
 							auto& v = g[i];
-							ImGui::Text("%i) %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age);
+							ImGui::Text("%i) %i %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age, g[i].repeat);
 						}
 					}
 				}
