@@ -137,6 +137,5 @@
     <None Include="Shaders\Graphics\world.vert">
       <Filter>Шейдеры\Graphics\world</Filter>
     </None>
-    <None Include="..\.gitignore" />
   </ItemGroup>
 </Project>

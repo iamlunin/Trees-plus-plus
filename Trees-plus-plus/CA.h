@@ -4,20 +4,16 @@
 
 // сделать энергию
 // сделать свет
-// сделать настраиваемую консоль
 // сделать ползунок скорости
+// 
+// можно сделать настраиваемую консоль
 // можно сделать регулировку полей класса СА через гуи
 // можно сделать бенчмарки
-// можно сделать раздельный вызов функций become
 // можно сделать вероятность мутации генетически детерменированную
-// рипит мод
-// килл семена
-// отображать возраст жизни в более понятном значении
+// можно сделать килл семена
+// можно отображать возраст жизни в более понятном значении
 
 
-#define WIDTH 1200
-#define HEIGHT 150
-#define SIZE WIDTH*(HEIGHT+1)
 
 Randomaizer gRAND;
 
@@ -53,22 +49,16 @@ inline uint32_t color_u32(ivec4 c) {
 template<typename T>
 class PoolContainer {
 public:
-	//T storage[WIDTH];
 	std::vector<T> storage;
 	std::vector<int> disabled;
 	std::vector<int> enabled;
 	
 
-	//PoolContainer() {
-	//	for (int i = 0; i < WIDTH; i++)
-	//		disabled.push_back(i);
-	//}
 
 	int get_new() {
 		if (disabled.empty()) {
 			enabled.push_back(storage.size());
 			storage.push_back(T());
-			//throw "PoolContainer get_new error";
 		}
 		else {
 			enabled.push_back(disabled.back());
@@ -126,6 +116,7 @@ public:
 	uint8_t type;
 	uint8_t breeding_age;
 	uint8_t repeat;
+
 	Mode(){
 
 	}
@@ -293,20 +284,15 @@ public:
 	int height;
 	int extended_height;
 	int length;
-
 	std::vector<Cell> world_map;
-	//Cell world_map[SIZE];
-
 	int frame_count = 0;
 	int great_spawn_counter = -1;
 	enum { up, right, down, left };
-	//std::vector<int> directions;
 	int directions[4];
 	std::vector<LiveCell> live_cell_arr;
 
 	CellularAutomation(int w, int h) {
-		//w = WIDTH;
-		//h = HEIGHT;
+
 		color_map.resize(w * h * 4, 255);
 		color_map_u32 = (uint32_t*)&color_map[0];
 		gRAND.ini();
