@@ -15,6 +15,10 @@
 // отображать возраст жизни в более понятном значении
 
 
+#define WIDTH 1200
+#define HEIGHT 150
+#define SIZE WIDTH*(HEIGHT+1)
+
 Randomaizer gRAND;
 
 uint8_t r8(int out, int to) { // от 0 до 255 
@@ -32,11 +36,11 @@ uint8_t generate_type() {
 }
 
 uint8_t generate_breeding_age() {
-	return r8(0, 4);
+	return r8(0, 6);
 }
 
 uint8_t generate_repeat() {
-	return r8(0, 4);
+	return r8(0, 6);
 }
 
 
@@ -49,12 +53,22 @@ inline uint32_t color_u32(ivec4 c) {
 template<typename T>
 class PoolContainer {
 public:
+	//T storage[WIDTH];
 	std::vector<T> storage;
+	std::vector<int> disabled;
+	std::vector<int> enabled;
+	
+
+	//PoolContainer() {
+	//	for (int i = 0; i < WIDTH; i++)
+	//		disabled.push_back(i);
+	//}
 
 	int get_new() {
 		if (disabled.empty()) {
 			enabled.push_back(storage.size());
 			storage.push_back(T());
+			//throw "PoolContainer get_new error";
 		}
 		else {
 			enabled.push_back(disabled.back());
@@ -86,8 +100,7 @@ public:
 		return storage[index];
 	};
 
-	std::vector<int> enabled;
-	std::vector<int> disabled;
+	
 };
 
 template <typename T>
@@ -141,10 +154,11 @@ public:
 	std::vector<Mode> modes;
 	float max_age;
 	ivec3 color;
-
+	bool symmetry;
 	
 
 	Genom() {
+		symmetry = gRAND.pf() > 0.5;
 		max_age = gRAND.pf();
 		color = ivec3(gRAND.u8(), gRAND.u8(), gRAND.u8());
 		modes.resize(size);
@@ -253,7 +267,9 @@ public:
 class Cell {
 public:
 	uint8_t type;
-
+	Cell() {
+		type = air;
+	}
 
 	Cell(int t) {
 		type = t;
@@ -277,15 +293,20 @@ public:
 	int height;
 	int extended_height;
 	int length;
+
 	std::vector<Cell> world_map;
+	//Cell world_map[SIZE];
+
 	int frame_count = 0;
 	int great_spawn_counter = -1;
 	enum { up, right, down, left };
-	std::vector<int> directions;
+	//std::vector<int> directions;
+	int directions[4];
 	std::vector<LiveCell> live_cell_arr;
 
 	CellularAutomation(int w, int h) {
-
+		//w = WIDTH;
+		//h = HEIGHT;
 		color_map.resize(w * h * 4, 255);
 		color_map_u32 = (uint32_t*)&color_map[0];
 		gRAND.ini();
@@ -308,7 +329,13 @@ public:
 				world_map[ind].type = ground;
 		}
 
-		directions = { width , 1, -width, -1 };
+
+		int tmpArray[4] = { width , 1, -width, -1 };
+		for (int i = 0; i < 4; i++) {
+			directions[i] = tmpArray[i];
+		}
+
+
 	}
 
 
@@ -341,7 +368,7 @@ public:
 			LiveCell live_cell = live_cell_arr[ind];
 			int index = live_cell.index;
 			if (index > 0) {
-				kill_cell(ind, live_cell, index);
+				kill_cell( live_cell, index);
 			}
 		}
 	}
@@ -354,9 +381,13 @@ private:
 	void cells_handler() {
 
 		int old_length = live_cell_arr.size();
+
+		
 		for (int ind = 0; ind < old_length; ind++) {
 
-			LiveCell& live_cell = live_cell_arr[ind];
+			
+
+			LiveCell& live_cell = live_cell_arr[ind]; // что с этим делать
 			int index_map = live_cell.index;
 			int type = world_map[index_map].type;
 
@@ -386,7 +417,7 @@ private:
 						// СЕМЕНЬ УМИРАЕТ
 					default:
 				
-						kill_cell(ind, live_cell, index_map);
+						kill_cell( live_cell, index_map);
 				}
 			}
 			//else if (type == bullet) {
@@ -414,7 +445,7 @@ private:
 			//	//case bullet:
 			//
 			//	default: // ПУЛЯ УМИРАЕТ
-			//		kill_cell(ind, live_cell, index_map);
+			//		kill_cell( live_cell, index_map);
 			//	}
 			//}
 			else {
@@ -422,7 +453,7 @@ private:
 				if (trees[live_cell.index_tree].alive == false
 					//|| trees[live_cell.index_tree].cell_counter >= max_cell
 					) { 
-					kill_cell(ind, live_cell, index_map);
+					kill_cell( live_cell, index_map);
 					continue;
 				}
 
@@ -500,8 +531,8 @@ private:
 	}
 
 
-	void kill_cell(int index, LiveCell& cell, int index_world_map) {
-		live_cell_arr[index].index = -live_cell_arr[index].index;
+	void kill_cell( LiveCell& cell, int index_world_map) {
+		cell.index = -cell.index;
 		become(index_world_map, air);
 		trees[cell.index_tree].cell_counter--;
 	}
@@ -533,7 +564,7 @@ private:
 		// ПО КАЖДОМУ ИЗ НАПРАВЛЕНИЙ
 		for (int i = 0; i < 4; i++) {
 			// ЕСЛИ ЕСТЬ ЖЕЛАНИЕ РАЗМНОЖИТСЯ
-			const uint8_t& g = mode.dir[i];
+			const uint8_t& g = mode.dir[tree.genom.symmetry && i == left ? right : i];
 			if (g < tree.genom.size) {
 				// ЕСЛИ ЕСТЬ ВОЗМОЖНОСТЬ РАЗМНОЖИТСЯ
 				int index_n = live_cell.index + directions[i];

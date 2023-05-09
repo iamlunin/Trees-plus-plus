@@ -345,20 +345,21 @@ int Context::run(int w, int h) {
 					if (e.index == index) {
 						tree_id = e.index_tree;
 						auto g = world.CA.trees[tree_id].genom;
-
+			
 						ImGui::Text("Дерево:");
 						ImGui::Text("индекс %i", tree_id);
 						ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
 						ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
 						//ImGui::Text("энергия %i", world.CA.trees[tree_id].energy);
-
-
+			
+			
 						ImGui::Text("\nКлетка:");
 						ImGui::Text("мод %i", e.index_mode);
 						ImGui::Text("возраст %i", e.age);
 						ImGui::Text("повтор %i", e.repeat);
-
+			
 						ImGui::Text("\nГеном:");
+						ImGui::Text("Симметрия %i", g.symmetry);
 						ImGui::Text("тип, age деления, повтор");
 						for (int i = 0; i < g.size; i++) {
 							auto& v = g[i];
@@ -366,9 +367,9 @@ int Context::run(int w, int h) {
 						}
 					}
 				}
-
-		
-
+			
+			
+			
 				ImGui::TreePop();
 			}
 
