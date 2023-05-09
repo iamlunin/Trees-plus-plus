@@ -9,6 +9,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.gitignore
+*.gitattributes
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -20,8 +22,7 @@ mono_crash.*
 [Dd]ebug/
 [Dd]ebug Console/
 Trees-plus-plus/.android/
-.gitignore
-.gitattributes
+
 Trees-plus-plus/[Dd]ebug Console/
 [Dd]ebugPublic/
 [Rr]elease/
