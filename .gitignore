@@ -19,6 +19,9 @@ mono_crash.*
 # Build results
 [Dd]ebug/
 [Dd]ebug Console/
+Trees-plus-plus/.android/
+.gitignore
+.gitattributes
 Trees-plus-plus/[Dd]ebug Console/
 [Dd]ebugPublic/
 [Rr]elease/
