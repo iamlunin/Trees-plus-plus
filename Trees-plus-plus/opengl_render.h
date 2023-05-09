@@ -327,10 +327,47 @@ int Context::run(int w, int h) {
 			//
 			//	ImGui::TreePop();
 			//}
+
+
+			if (ImGui::TreeNode("Крутилки")) {
+				ImGui::Text("стоимость семечка: %.1f", world.CA.price_semen);
+				ImGui::PushItemWidth(200);
+				float wp = world.CA.price_semen;
+				ImGui::DragFloat("##world.CA.price_semen", &wp, 100.0f, 0.f, +1000.f, "%.1f");
+				world.CA.price_semen = wp;
+				ImGui::PopItemWidth;
 			
+
+				ImGui::Text("стоимость листа: %.1f", world.CA.price_green);
+				ImGui::PushItemWidth(200);
+				float wp1 = world.CA.price_green;
+				ImGui::DragFloat("##world.CA.price_green", &wp1, 5.0f, 0.f, +1000.f, "%.1f");
+				world.CA.price_green = wp1;
+				ImGui::PopItemWidth;
+			
+
+				ImGui::Text("налог на семечки: %.1f", world.CA.tax);
+				ImGui::PushItemWidth(200);
+				float wp2 = world.CA.tax;
+				ImGui::DragFloat("##world.CA.tax", &wp2, 1.1f, 0.f, +10.f, "%.1f");
+				world.CA.tax = wp2;
+				ImGui::PopItemWidth;
+			
+
+				ImGui::Text("прибыль: %.1f", world.CA.global_profit);
+				ImGui::PushItemWidth(200);
+				float wp3 = world.CA.global_profit;
+				ImGui::DragFloat("##world.CA.global_profit", &wp3, 1.0f, 0.f, +10.f, "%.1f");
+				world.CA.global_profit = wp3;
+				ImGui::PopItemWidth;
+
+				ImGui::TreePop();
+
+				
+			}
 			if (ImGui::TreeNode("Глобал")) {
 				ImGui::Text("Вымираний было: %i", world.CA.great_spawn_counter);
-				ImGui::Text("Возраст жизни: %i", world.CA.frame_count);
+				ImGui::Text("Возраст жизни: %i", world.CA.frame_count / 1000);
 				ImGui::Text("Количество деревьев: %i", world.CA.trees.enabled.size());
 				ImGui::Text("Количество клеток: %i", world.CA.live_cell_arr.size());
 				ImGui::TreePop();
@@ -347,7 +384,9 @@ int Context::run(int w, int h) {
 						auto g = world.CA.trees[tree_id].genom;
 			
 						ImGui::Text("Дерево:");
+
 						ImGui::Text("индекс %i", tree_id);
+						ImGui::Text("энергия %f", world.CA.trees[tree_id].energy);
 						ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
 						ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
 						ImGui::Text("Симметрия %i", g.symmetry);

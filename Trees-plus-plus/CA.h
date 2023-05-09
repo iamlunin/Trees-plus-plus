@@ -3,7 +3,6 @@
 // TODO
 
 // сделать энергию
-// сделать свет
 // сделать ползунок скорости
 // 
 // можно сделать настраиваемую консоль
@@ -11,7 +10,6 @@
 // можно сделать бенчмарки
 // можно сделать вероятность мутации генетически детерменированную
 // можно сделать килл семена
-// можно отображать возраст жизни в более понятном значении
 
 
 
@@ -151,7 +149,7 @@ public:
 	Genom() {
 		symmetry = gRAND.pf() > 0.5;
 		max_age = gRAND.pf();
-		color = ivec3(gRAND.u8(), gRAND.u8(), gRAND.u8());
+		color = ivec3(gRAND.u8() / 2, gRAND.u8() / 2 + 127, gRAND.u8() / 2);
 		modes.resize(size);
 		for (int i = 0; i < size; i++)
 			modes[i] = Mode(size);
@@ -173,6 +171,7 @@ public:
 	int age;
 	bool alive;
 	int cell_counter;
+	float energy;
 
 	uint32_t color_deviation = 0u;
 	Genom genom;
@@ -181,17 +180,24 @@ public:
 		init();
 	}
 
-	Tree(Genom& from_this) {
-		init(from_this);
+	Tree(float energy) {
+		init(energy);
 	}
 
-	Tree(Genom& from_this, int mutation) {
-		init(from_this, mutation);
+	Tree(Genom& from_this, float energy) {
+		init(from_this, energy);
 	}
 
-	void init(Genom& from_this, int mutation) {
+	Tree(Genom& from_this, int mutation, float energy) {
+		init(from_this, mutation, energy);
+	}
+
+
+	void init(Genom& from_this, int mutation, float e) {
+		energy = e;
 		genom = from_this;
-		genom.color = clamp(genom.color + ivec3(vec3(gRAND.nf(), gRAND.nf(), gRAND.nf()) * vec3(10, 10, 10)), ivec3(0), ivec3(255));
+
+		genom.color = clamp(genom.color + ivec3(vec3(gRAND.nf(), gRAND.nf(), gRAND.nf()) * vec3(10, 10, 10)), ivec3(0), ivec3(127, 255, 127));
 		genom.max_age = clamp(genom.max_age + gRAND.nf() * 0.02, 0, 1);
 		color_deviation = color_u32(ivec4(genom.color[0], genom.color[1], genom.color[2], 0u));
 		for (int i = 0; i < mutation; i++) {
@@ -209,15 +215,24 @@ public:
 		_init();
 	}
 
-	void init(Genom& from_this) {
+	void init(Genom& from_this, float e) {
+		energy = e;
 		genom = from_this;
+		_init();
+	}
+
+	void init(float e) {
+		energy = e;
 		_init();
 	}
 
 	void init() {
 		genom = Genom();
+		energy = 1000;
 		_init();
 	}
+
+	
 
 
 
@@ -226,6 +241,7 @@ private:
 		age = 0;
 		cell_counter = 0;
 		alive = true;
+
 	}
 };
 
@@ -234,7 +250,7 @@ private:
 class LiveCell {
 public:
 	int index;
-
+	//float energy;
 	uint8_t index_mode;
 	int age;
 	int index_tree;
@@ -293,6 +309,11 @@ public:
 	std::vector<LiveCell> live_cell_arr;
 	std::vector<int> light_arr;
 
+	float global_profit = 1.;
+	float price_semen = 100.;
+	float price_green = 5.;
+	float tax = 1.1;
+
 
 	CellularAutomation(int w, int h) {
 		
@@ -301,7 +322,7 @@ public:
 		gRAND.ini();
 		max_cell = h * 4;
 		max_age = h * 8;
-		light_arr.resize(w, 1);
+		light_arr.resize(w, 0);
 
 		width = w;
 		height = h, extended_height = h + 1;
@@ -351,7 +372,7 @@ public:
 		cells_handler();
 		trees_handler();
 		calculate_light();
-		std::fill(light_arr.begin(), light_arr.end(), 1);
+		std::fill(light_arr.begin(), light_arr.end(), 0);
 		frame_count++;
 	}
 
@@ -400,7 +421,7 @@ private:
 						// СЕМЕНЬ ПРОРОСТАЕТ
 					case ground:
 						trees[live_cell.index_tree].cell_counter--;
-						live_cell.index_tree = trees.push(Tree(trees[live_cell.index_tree].genom, 1));
+						live_cell.index_tree = trees.push(Tree(trees[live_cell.index_tree].genom, 1, price_semen));
 						live_cell.repeat = trees[live_cell.index_tree].genom[live_cell.index_mode].repeat;
 						become(index_map, green);
 						trees[live_cell.index_tree].cell_counter++;
@@ -460,6 +481,11 @@ private:
 						try_grow(live_cell);
 					}
 				}
+				else if (type == wood) {
+					float profit = (color_map[index_map * 4 + 3] / 255.) * global_profit;
+					
+					trees[live_cell.index_tree].energy += profit;
+				}
 			}
 		}
 	}
@@ -511,11 +537,11 @@ private:
 
 	void calculate_light() {
 		for (int x = 0; x < light_arr.size(); x++) {
-			float light = light_arr[x] == height-1 
-				? 1. 
-				: color_map[((light_arr[x]+1) * width + x) * 4 + 3]/255.;
+			int y = light_arr[x];
+			float light = y >= height-1 ? 1. 
+				: color_map[((y+1) * width + x) * 4 + 3]/255.;
 
-			for (int y = light_arr[x]; y >= 1; y--) {
+			while (y >= 1) {
 				int index_map = y * width + x;
 
 				if (world_map[index_map].type != air) {
@@ -523,13 +549,15 @@ private:
 					light = std::max(0., light - 0.05);
 				}
 				else {
-					light = std::min(1., light + 0.05);
+					light = std::min(1., light + 0.025);
 					//light = std::min(1., light * (1 / 0.99));
 				}
 
-				color_map[index_map * 4 + 3] = int(light *255);
-	
+				color_map[index_map * 4 + 3] = int(light * 255);
+				y--;
 			}
+
+
 		}
 	}
 	
@@ -560,6 +588,7 @@ private:
 				tree.age >= max_age * tree.genom.max_age 
 				|| tree.cell_counter <= 0
 				|| tree.cell_counter > max_cell
+				|| tree.energy <= 0
 				) {
 				tree.alive = false;
 				if (tree.cell_counter <= 0)
@@ -582,7 +611,7 @@ private:
 		if (world_map[ind].type != air)
 			return;
 		// спавним виртуальное дерево родитель
-		spawn(semen, ind, trees.push(Tree()));
+		spawn(semen, ind, trees.push(Tree(price_semen)));
 	}
 
 	void spawn(int type, int ind, int ind_tree) {
@@ -611,10 +640,32 @@ private:
 				int index_n = live_cell.index + directions[i];
 				if (world_map[index_n].type == air) {
 					// РАЗМНОЖИТСЯ
-					if (live_cell.repeat > 0) 
-						spawn(tree.genom.modes[live_cell.index_mode].type, index_n, live_cell.index_tree, live_cell.index_mode, live_cell.repeat - 1);
-					 else
-						spawn(tree.genom.modes[g].type, index_n, live_cell.index_tree, g, tree.genom.modes[g].repeat);
+					
+					int gen;
+					int repeat;
+					int type;
+					int index_tree = live_cell.index_tree;
+
+					if (live_cell.repeat > 0) {
+						gen = live_cell.index_mode;
+						repeat = live_cell.repeat - 1;
+
+						//spawn(tree.genom.modes[live_cell.index_mode].type, index_n, live_cell.index_tree, live_cell.index_mode, live_cell.repeat - 1);
+
+					}
+					else {
+						gen = g;
+						repeat = tree.genom.modes[g].repeat;
+						//spawn(tree.genom.modes[g].type, index_n, live_cell.index_tree, g, tree.genom.modes[g].repeat);
+					}
+
+					type = tree.genom.modes[gen].type;
+					int price = type == semen ? price_semen * tax : price_green;
+					if (price <= trees[index_tree].energy) {
+						trees[index_tree].energy -= price;
+						spawn(type, index_n, index_tree, gen, repeat);
+					}
+					
 				}
 			}
 		}

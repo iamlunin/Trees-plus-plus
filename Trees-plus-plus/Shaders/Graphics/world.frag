@@ -51,16 +51,17 @@ float insideBox(vec2 v, vec2 bottomLeft, vec2 topRight) {
 
 
 float fix_color_sky(vec2 coord, vec2 size){
-//	float count_layers = 5.;
-//	float horizont = 1;
-//	float min_bright = 0.7;
-//	float bright_pixel_art = 0.9;
-//
-//	float yPaster = min(1., floor(coord.y*(1/horizont)/size.y * count_layers)/count_layers) * (1.-min_bright) + min_bright;
-//	float c2 = min(1., float(mod(coord.x, 2)==0) + float(mod(coord.y, 2)==0));
-//	float c3 =  coord.y >= size.y*horizont ? (1.-c2) : (1.-c2)*bright_pixel_art ;
-//	return (c3 + c2 ) * yPaster;
-	return abs(size.y/2.-coord.y) < size.y/4. ? 1. : 0.9;
+	float count_layers = 5.;
+	float horizont = 1;
+	float min_bright = 0.7;
+	float bright_pixel_art = 0.9;
+
+	float yPaster = min(1., floor(coord.y*(1/horizont)/size.y * count_layers)/count_layers) * (1.-min_bright) + min_bright;
+	//float c2 = min(1., float(mod(coord.x, 2)==0) + float(mod(coord.y, 2)==0));
+	//float c3 =  coord.y >= size.y*horizont ? (1.-c2) : (1.-c2)*bright_pixel_art ;
+	//return (c3 + c2 ) * yPaster;
+	return yPaster;
+//	return abs(size.y/2.-coord.y) < size.y/4. ? 1. : 0.9;
 
 }
 
@@ -84,12 +85,13 @@ void main() {
 		vec4 map_data = texelFetch(map_texture, ipos, 0);
 
 		if(map_data[0] * map_data[1] * map_data[2] > 0.999){
-			pixel = mix(vec3(175, 225, 255), vec3(40, 190, 245), fPos.y) * map_data[3]; // цвет неба
+			pixel = mix(vec3(175, 225, 255), vec3(40, 190, 245), fPos.y);// * map_data[3]; // цвет неба
 			pixel *= fix_color_sky(Dr-ipos, Dr);
 		}
 		else
-
-			pixel = map_data.rgb * (mix(pow(map_data.a, 1.0), 1., 0.1)) * 255.;
+			pixel = map_data.rgb * 255.;
+			
+		pixel = pixel * (mix(pow(map_data.a, 0.75), 1., 0.1)) ;
 
 		if (ipos == Mpos)
 			pixel *= 0.9;
