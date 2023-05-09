@@ -88,7 +88,8 @@ void main() {
 			pixel *= fix_color_sky(Dr-ipos, Dr);
 		}
 		else
-			pixel = map_data.rgb * map_data.a * map_data.a * 255.;
+
+			pixel = map_data.rgb * (mix(pow(map_data.a, 1.0), 1., 0.1)) * 255.;
 
 		if (ipos == Mpos)
 			pixel *= 0.9;

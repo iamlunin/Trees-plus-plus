@@ -258,6 +258,7 @@ public:
 class Cell {
 public:
 	uint8_t type;
+
 	Cell() {
 		type = air;
 	}
@@ -290,14 +291,18 @@ public:
 	enum { up, right, down, left };
 	int directions[4];
 	std::vector<LiveCell> live_cell_arr;
+	std::vector<int> light_arr;
+
 
 	CellularAutomation(int w, int h) {
-
+		
 		color_map.resize(w * h * 4, 255);
 		color_map_u32 = (uint32_t*)&color_map[0];
 		gRAND.ini();
 		max_cell = h * 4;
 		max_age = h * 8;
+		light_arr.resize(w, 1);
+
 		width = w;
 		height = h, extended_height = h + 1;
 		length = w * h;
@@ -345,6 +350,8 @@ public:
 		clean_up_index_live_arr();
 		cells_handler();
 		trees_handler();
+		calculate_light();
+		std::fill(light_arr.begin(), light_arr.end(), 1);
 		frame_count++;
 	}
 
@@ -460,23 +467,71 @@ private:
 
 
 	void become(int index, int type, uint32_t color_deviation = 0) {
-		static const uint32_t color_arr[] = {
-				color_u32(ivec4(0, 0, 0, 255)),			// semen = 0,
-				color_u32(ivec4(103, 215, 61, 255)),	// green = 1,
-				color_u32(ivec4(233, 103, 61, 255)),	// bullet = 2,
-				color_u32(ivec4(0, 0, 0, 255)),	        // wood = 2,
-				color_u32(ivec4(255)),					// air = 3,
-				color_u32(ivec4(60, 50, 40, 255))		// ground = 4,
+		
+		static const ivec4 color_arr4[] = {
+				ivec4(0, 0, 0, 255),			// semen = 0,
+				ivec4(103, 215, 61, 255),	// green = 1,
+				ivec4(233, 103, 61, 255),	// bullet = 2,
+				ivec4(0, 0, 0, 255),	        // wood = 2,
+				ivec4(255,255,255,255),					// air = 3,
+				ivec4(60, 50, 40, 255)		// ground = 4,
 		};
 
+		static const uint32_t color_arr[] = {
+				color_u32(color_arr4[semen]),			// semen = 0,
+				color_u32(color_arr4[green]),	// green = 1,
+				color_u32(color_arr4[bullet]),	// bullet = 2,
+				color_u32(color_arr4[wood]),	        // wood = 2,
+				color_u32(color_arr4[air]),					// air = 3,
+				color_u32(color_arr4[ground])		// ground = 4,
+		};
+
+
+
 		if (type != wood)
-			color_map_u32[index] = color_arr[type];
+			color_map_u32[index] = color_arr[type]; //* light;
 		else
 			color_map_u32[index] = color_arr[type] + color_deviation;
 
+
+		// записать клетку в список клеток тень которых надо просчитать
+		// все немного сложнее но я не скажу
+		int x_ind = index % width;
+		int y_ind = index / width;
+		if (y_ind > light_arr[x_ind]) {
+			light_arr[x_ind] = y_ind;
+		}
+
+
 		world_map[index].type = type;
+
+		
 	}
 
+
+	void calculate_light() {
+		for (int x = 0; x < light_arr.size(); x++) {
+			float light = light_arr[x] == height-1 
+				? 1. 
+				: color_map[((light_arr[x]+1) * width + x) * 4 + 3]/255.;
+
+			for (int y = light_arr[x]; y >= 1; y--) {
+				int index_map = y * width + x;
+
+				if (world_map[index_map].type != air) {
+					//light = light * 0.95;
+					light = std::max(0., light - 0.05);
+				}
+				else {
+					light = std::min(1., light + 0.05);
+					//light = std::min(1., light * (1 / 0.99));
+				}
+
+				color_map[index_map * 4 + 3] = int(light *255);
+	
+			}
+		}
+	}
 	
 
 
@@ -564,7 +619,7 @@ private:
 			}
 		}
 
-
+		
 
 		become(live_cell.index, wood, tree.color_deviation); // одеревенение 
 
