@@ -330,6 +330,7 @@ int Context::run(int w, int h) {
 
 
 			if (ImGui::TreeNode("Крутилки")) {
+				ImGui::Text("Alt + ЛКМ");
 				ImGui::Text("стоимость семечка: %.1f", world.CA.price_semen);
 				ImGui::PushItemWidth(200);
 				float wp = world.CA.price_semen;
@@ -398,7 +399,8 @@ int Context::run(int w, int h) {
 						ImGui::Text("повтор %i", e.repeat);
 						ImGui::Text("\nГеном:");
 						
-						ImGui::Text("тип, age деления, повтор");
+						ImGui::Text("верх, право, низ, лево,");
+						ImGui::Text("тип, слип, повтор");
 						for (int i = 0; i < g.size; i++) {
 							auto& v = g[i];
 							ImGui::Text("%i) %i %i %i %i %i %i %i", i, v[0], v[1], v[2], v[3], g[i].type, g[i].breeding_age, g[i].repeat);

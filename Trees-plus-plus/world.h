@@ -73,7 +73,7 @@ public:
 
 	int task = 0;
 	bool auto_run = 1;
-	bool slow_mode = 1;
+	bool slow_mode = 0;
 
 	bool is_open;
 
