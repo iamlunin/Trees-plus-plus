@@ -12,5 +12,5 @@ int main() {
 	//if (ascii)
 	//	console_ran(120, 30);
 	//else
-		render_ran(1200, 150);
+		render_ran(4000, 200);
 }

@@ -91,7 +91,7 @@ void main() {
 		else
 			pixel = map_data.rgb * 255.;
 			
-		pixel = pixel * (mix(pow(map_data.a, 0.75), 1., 0.1)) ;
+		pixel = pixel * (mix(pow(map_data.a, 0.75), 1., 0.25)) ;
 
 		if (ipos == Mpos)
 			pixel *= 0.9;

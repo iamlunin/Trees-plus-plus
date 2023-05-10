@@ -341,7 +341,7 @@ int Context::run(int w, int h) {
 				ImGui::Text("стоимость листа: %.1f", world.CA.price_green);
 				ImGui::PushItemWidth(200);
 				float wp1 = world.CA.price_green;
-				ImGui::DragFloat("##world.CA.price_green", &wp1, 5.0f, 0.f, +1000.f, "%.1f");
+				ImGui::DragFloat("##world.CA.price_green", &wp1, 10.0f, 0.f, +1000.f, "%.1f");
 				world.CA.price_green = wp1;
 				ImGui::PopItemWidth;
 			
@@ -349,7 +349,7 @@ int Context::run(int w, int h) {
 				ImGui::Text("налог на семечки: %.1f", world.CA.tax);
 				ImGui::PushItemWidth(200);
 				float wp2 = world.CA.tax;
-				ImGui::DragFloat("##world.CA.tax", &wp2, 1.1f, 0.f, +10.f, "%.1f");
+				ImGui::DragFloat("##world.CA.tax", &wp2, 2.0f, 0.f, +10.f, "%.1f");
 				world.CA.tax = wp2;
 				ImGui::PopItemWidth;
 			
@@ -390,7 +390,6 @@ int Context::run(int w, int h) {
 						ImGui::Text("возраст %i/%i", world.CA.trees[tree_id].age, int(g.max_age* world.CA.max_age));
 						ImGui::Text("клеток %i/%i", world.CA.trees[tree_id].cell_counter, world.CA.max_cell);
 						ImGui::Text("Симметрия %i", g.symmetry);
-						//ImGui::Text("энергия %i", world.CA.trees[tree_id].energy);
 			
 			
 						ImGui::Text("\nКлетка:");

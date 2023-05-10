@@ -2,7 +2,6 @@
 
 // TODO
 
-// сделать энергию
 // сделать ползунок скорости
 // 
 // можно сделать настраиваемую консоль
@@ -29,12 +28,12 @@ uint8_t generate_type() {
 	return r8(0, 2);
 }
 
-uint8_t generate_breeding_age() {
-	return r8(0, 6);
+uint8_t generate_sleep() {
+	return r8(0, 2) < 0.5 ? r8(0, 50) : 0;
 }
 
 uint8_t generate_repeat() {
-	return r8(0, 6);
+	return r8(0, 2) < 0.5 ? r8(0, 20) : 0;
 }
 
 
@@ -122,7 +121,7 @@ public:
 	Mode(int size) {
 		dir = { generate_gen(size), generate_gen(size), generate_gen(size), generate_gen(size) };
 		type = generate_type();
-		breeding_age = generate_breeding_age();
+		breeding_age = generate_sleep();
 		repeat = generate_repeat();
 	}
 
@@ -139,7 +138,7 @@ public:
 
 class Genom {
 public:
-	int size = 10; // сайз не надо делать более чем 255/2
+	int size = 30; // сайз не надо делать более чем 255/2
 	std::vector<Mode> modes;
 	float max_age;
 	ivec3 color;
@@ -197,7 +196,7 @@ public:
 		energy = e;
 		genom = from_this;
 
-		genom.color = clamp(genom.color + ivec3(vec3(gRAND.nf(), gRAND.nf(), gRAND.nf()) * vec3(10, 10, 10)), ivec3(0), ivec3(127, 255, 127));
+		genom.color = clamp(genom.color + ivec3(vec3(gRAND.nf(), gRAND.nf(), gRAND.nf()) * vec3(10, 10, 10)), ivec3(0, 127,0), ivec3(127, 255, 127));
 		genom.max_age = clamp(genom.max_age + gRAND.nf() * 0.02, 0, 1);
 		color_deviation = color_u32(ivec4(genom.color[0], genom.color[1], genom.color[2], 0u));
 		for (int i = 0; i < mutation; i++) {
@@ -207,7 +206,7 @@ public:
 			if (index2 == 5)
 				genom[index1].type = generate_type();
 			else if (index2 == 4)
-				genom[index1].breeding_age = generate_breeding_age();
+				genom[index1].breeding_age = generate_sleep();
 			else
 				genom[index1][index2] = generate_gen(genom.size);
 		
@@ -311,8 +310,8 @@ public:
 
 	float global_profit = 1.;
 	float price_semen = 100.;
-	float price_green = 5.;
-	float tax = 1.1;
+	float price_green = 10.;
+	float tax = 2.0;
 
 
 	CellularAutomation(int w, int h) {
@@ -320,8 +319,8 @@ public:
 		color_map.resize(w * h * 4, 255);
 		color_map_u32 = (uint32_t*)&color_map[0];
 		gRAND.ini();
-		max_cell = h * 4;
-		max_age = h * 8;
+		//max_cell = h * 3;
+		max_age = h * 2;
 		light_arr.resize(w, 0);
 
 		width = w;
@@ -334,7 +333,15 @@ public:
 			int x = (ind % width);
 			int y = (ind / width);
 
-			if (y < 1)
+			if (y < 1 || float(y)/height < 
+				(sin(x* 0.01463 + 165)/2+0.5)*0.03 +
+				(sin(x * 0.0456524 + 234) / 2 + 0.5) * 0.02 +
+				(sin(x * 0.074346 + 347) / 2 + 0.5) * 0.01 +
+				(sin(x * 0.367935 + 346) / 2 + 0.5) * 0.005 +
+				(sin(x * 0.7463457 + 2123534) / 2 + 0.5) * 0.005 +
+				(sin(x * 1.1365236 + 1643) / 2 + 0.5) * 0.005 
+				//(sin(x * 0.4214 + 123) / 2 + 0.5) * 0.01
+				)
 				become(ind, ground);
 
 			if (y >= height)
@@ -546,10 +553,10 @@ private:
 
 				if (world_map[index_map].type != air) {
 					//light = light * 0.95;
-					light = std::max(0., light - 0.05);
+					light = std::max(0., light - 0.2);
 				}
 				else {
-					light = std::min(1., light + 0.025);
+					light = std::min(1., light + 0.02);
 					//light = std::min(1., light * (1 / 0.99));
 				}
 
@@ -587,7 +594,7 @@ private:
 			if (
 				tree.age >= max_age * tree.genom.max_age 
 				|| tree.cell_counter <= 0
-				|| tree.cell_counter > max_cell
+				//|| tree.cell_counter > max_cell
 				|| tree.energy <= 0
 				) {
 				tree.alive = false;
